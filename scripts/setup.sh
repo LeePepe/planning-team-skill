@@ -75,7 +75,7 @@ if $CHECK_ONLY; then
   fi
   echo ""
   echo "Agents ($AGENTS_DIR):"
-  for agent in team-lead planner plan-reviewer codex-coder copilot; do
+  for agent in team-lead planner plan-reviewer codex-coder copilot verifier; do
     [ -f "$AGENTS_DIR/$agent.md" ] \
       && ok "  $agent.md" \
       || fail "  $agent.md missing"
@@ -196,5 +196,5 @@ ok "Setup complete."
 if [ "$MODE" = "repo" ]; then
   echo ""
   info "Per-repo team config: $TEAM_MD"
-  info "Edit it to customize executor routing and review mode."
+  info "Edit it to customize executor routing, review mode, and verification commands."
 fi

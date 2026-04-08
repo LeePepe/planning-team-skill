@@ -1,6 +1,6 @@
 # Team Config
 
-> Copy this file to `.claude/team.md` in your repo to customize the planning team.
+> Copy this file to `.claude/team.md` in your repo to customize teamwork routing.
 > The team-lead and planner read this file before starting.
 
 ## Executor Routing
@@ -20,6 +20,17 @@ Examples:
 
 <!-- Options: review, adversarial-review -->
 default: review
+
+## Verification
+
+<!-- Optional post-execution verification commands (run in repo root). -->
+<!--
+Examples:
+- npm run lint
+- npm test
+- pnpm -r test
+- go test ./...
+-->
 
 ## Notes
 

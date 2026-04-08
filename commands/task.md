@@ -1,5 +1,5 @@
 ---
-description: Run a task through the full plan → review → execute pipeline. Pass your task description as the argument.
+description: Run a task through the full plan → review → execute → verify pipeline. Pass your task description as the argument.
 argument-hint: "<task description>"
 allowed-tools: Bash, Agent
 ---
@@ -28,7 +28,7 @@ If both are false, stop and tell the user to install at least one plugin:
 /reload-plugins
 ```
 
-## Step 2 — Read routing config
+## Step 2 — Read team config
 
 ```bash
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
@@ -50,6 +50,7 @@ Task: ${ARGUMENTS}
 Routing preferences: <contents of .claude/team.md, or "use defaults">
 Plugin availability: codex=<actual value from Step 1> copilot=<actual value from Step 1>
 Executor constraint: <derived from above>
+Verification preferences: <commands from .claude/team.md ## Verification, or "use plan task verification">
 ```
 
 ## Step 4 — Report outcome
@@ -58,4 +59,5 @@ Return:
 - Plan file path
 - Modified files grouped by executor
 - Failed or skipped tasks
+- Verification result and command evidence
 - Suggested follow-up actions

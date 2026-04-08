@@ -1,11 +1,11 @@
 ---
 name: teamwork
-description: Coordinate a full plan-review-execute pipeline with specialized agents (`team-lead`, `planner`, `plan-reviewer`, `codex-coder`, `copilot`). Use when work spans multiple files, requires a reviewed plan before coding, or benefits from parallel execution with explicit Codex/Copilot routing. Trigger on requests like "use the planning team", "plan then implement", "multi-agent workflow", or "/teamwork:task implement auth middleware".
+description: Coordinate a full plan-review-execute-verify pipeline with specialized agents (`team-lead`, `planner`, `plan-reviewer`, `codex-coder`, `copilot`, `verifier`). Use when work spans multiple files, requires a reviewed plan before coding, or benefits from parallel execution with explicit Codex/Copilot routing and verification gating.
 ---
 
 # Teamwork Skill
 
-Run a structured multi-agent pipeline: planner writes a plan, plan-reviewer gates quality, then executors implement approved tasks.
+Run a structured multi-agent pipeline: planner writes a plan, plan-reviewer gates quality, executors implement approved tasks, and verifier confirms checks.
 
 ## Dependencies
 
@@ -35,7 +35,7 @@ Use these commands:
 Natural language trigger:
 
 ```text
-Use the planning team to implement <feature>
+Use teamwork to implement <feature>
 ```
 
 > To install or check status, use `/teamwork:setup` (available after installing this plugin).
@@ -46,9 +46,10 @@ Use the planning team to implement <feature>
 team-lead
   ├── planner        → writes .claude/plan/<slug>.md with executor annotations
   ├── plan-reviewer  → reviews plan (review or adversarial-review)
-  └── executors (parallel where possible):
-        executor: codex   → codex-coder
-        executor: copilot → copilot
+  ├── executors (parallel where possible):
+  │     executor: codex   → codex-coder
+  │     executor: copilot → copilot
+  └── verifier       → runs post-execution verification gate
 ```
 
 ## Workflow
@@ -71,7 +72,7 @@ When only one plugin is installed, all tasks are routed to that executor regardl
 - Only copilot installed → all tasks go to `copilot`
 - Both installed        → tasks are routed per annotation (default behavior)
 
-### 2) Read repo routing config
+### 2) Read repo team config
 
 ```bash
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
@@ -82,6 +83,7 @@ If `.claude/team.md` exists, read:
 
 - Executor routing overrides
 - Preferred review mode (`review` or `adversarial-review`)
+- Preferred verification commands (`## Verification`)
 
 ### 3) Delegate orchestration to `team-lead`
 
@@ -98,6 +100,7 @@ Let `team-lead` run:
 1. `planner` creates the plan
 2. `plan-reviewer` reviews and iterates plan quality
 3. executors implement approved tasks
+4. `verifier` runs required checks before completion
 
 ### 4) Report outcome
 
@@ -106,6 +109,7 @@ Return:
 - plan path
 - modified files grouped by executor
 - failed/skipped tasks
+- verification result with command evidence
 - follow-up actions
 
 ## Per-Repo Customization
@@ -120,12 +124,17 @@ Drop a `.claude/team.md` in the repo to override defaults:
 
 ## Review Mode
 default: adversarial-review
+
+## Verification
+- npm run lint
+- npm test
 ```
 
 Optionally provide project-specific executor prompts in `.claude/agents/`:
 
 - `.claude/agents/codex-coder.md`
 - `.claude/agents/copilot.md`
+- `.claude/agents/verifier.md`
 
 Project-level agents automatically take priority over global ones.
 
@@ -142,6 +151,7 @@ Route by task weight and rigor requirement, not by language or file type:
 
 - Keep task routing values to `codex` or `copilot`.
 - Require review pass before any execution phase.
+- Require verification pass (or explicit `needs_manual_verification`) before claiming completion.
 - Keep planner and reviewer scoped to plan files; avoid direct project-code edits there.
 - Keep executor prompts concrete: scope, dependencies, verification.
 
@@ -152,6 +162,7 @@ Route by task weight and rigor requirement, not by language or file type:
 - `plan-reviewer.md`
 - `codex-coder.md`
 - `copilot.md`
+- `verifier.md`
 
 Install manually when needed:
 
