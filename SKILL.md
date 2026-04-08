@@ -9,7 +9,7 @@ Run a structured multi-agent pipeline: planner writes a plan, plan-reviewer gate
 
 ## Dependencies
 
-Install both plugins in Claude Code before running this skill:
+Install at least one plugin in Claude Code before running this skill (both are optional but recommended):
 
 - **[codex-plugin-cc](https://github.com/openai/codex-plugin-cc)** for Codex rescue/review integration
 - **[copilot-plugin-cc](https://github.com/LeePepe/copilot-plugin-cc)** for local Copilot rescue integration
@@ -101,14 +101,20 @@ team-lead
 ### 1) Validate plugin readiness
 
 ```bash
-# Verify codex plugin
-node $(find ~/.claude/plugins -name "codex-companion.mjs" | head -1) setup --json
+# Check which plugins are available
+CODEX_SCRIPT=$(find ~/.claude/plugins -name "codex-companion.mjs" 2>/dev/null | head -1)
+COPILOT_SCRIPT=$(find ~/.claude/plugins -name "copilot-companion.mjs" 2>/dev/null | head -1)
 
-# Verify copilot plugin
-node $(find ~/.claude/plugins -name "copilot-companion.mjs" | head -1) setup --json
+[ -n "$CODEX_SCRIPT" ]   && node "$CODEX_SCRIPT"   setup --json 2>/dev/null && CODEX_OK=true   || CODEX_OK=false
+[ -n "$COPILOT_SCRIPT" ] && node "$COPILOT_SCRIPT" setup --json 2>/dev/null && COPILOT_OK=true || COPILOT_OK=false
 ```
 
-Stop and request installation if either plugin is unavailable.
+At least one plugin must be available. Stop and request installation only if **both** are unavailable.
+
+When only one plugin is installed, all tasks are routed to that executor regardless of the `executor` annotation in the plan:
+- Only codex installed  → all tasks go to `codex-coder`
+- Only copilot installed → all tasks go to `copilot`
+- Both installed        → tasks are routed per annotation (default behavior)
 
 ### 2) Read repo routing config
 

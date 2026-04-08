@@ -67,9 +67,12 @@ check_plugin "copilot" "copilot-local" && COPILOT_OK=true || true
 if $CHECK_ONLY; then
   echo "=== Planning Team Skill — Status ==="
   echo ""
-  echo "Plugins:"
-  $CODEX_OK   && ok "  codex plugin installed"   || fail "  codex plugin NOT installed"
-  $COPILOT_OK && ok "  copilot plugin installed" || fail "  copilot plugin NOT installed"
+  echo "Plugins (at least one required):"
+  $CODEX_OK   && ok "  codex plugin installed"   || warn "  codex plugin not installed (optional)"
+  $COPILOT_OK && ok "  copilot plugin installed" || warn "  copilot plugin not installed (optional)"
+  if ! $CODEX_OK && ! $COPILOT_OK; then
+    fail "  Neither plugin is installed — at least one is required."
+  fi
   echo ""
   echo "Agents ($AGENTS_DIR):"
   for agent in team-lead planner plan-reviewer codex-coder copilot; do
@@ -154,31 +157,38 @@ PYEOF
 fi
 
 # ── Plugin install instructions ───────────────────────────────────────────────
+# At least one plugin is required; having both is recommended.
 echo ""
 NEEDS_RELOAD=false
 
-if ! $CODEX_OK; then
-  warn "codex plugin not installed. Run in Claude Code:"
-  info "/plugin install codex@openai-codex"
-  NEEDS_RELOAD=true
-else
+if $CODEX_OK; then
   ok "codex plugin already installed"
+else
+  info "codex plugin not installed (optional). To install, run in Claude Code:"
+  info "  /plugin install codex@openai-codex"
+  NEEDS_RELOAD=true
 fi
 
-if ! $COPILOT_OK; then
-  warn "copilot plugin not installed. Run in Claude Code:"
-  info "/plugin install copilot@copilot-local"
-  NEEDS_RELOAD=true
-else
+if $COPILOT_OK; then
   ok "copilot plugin already installed"
+else
+  info "copilot plugin not installed (optional). To install, run in Claude Code:"
+  info "  /plugin install copilot@copilot-local"
+  NEEDS_RELOAD=true
+fi
+
+if ! $CODEX_OK && ! $COPILOT_OK; then
+  echo ""
+  fail "Neither plugin is installed. At least one is required to use this skill."
+  info "Install codex:  /plugin install codex@openai-codex"
+  info "Install copilot: /plugin install copilot@copilot-local"
+  NEEDS_RELOAD=true
 fi
 
 if $NEEDS_RELOAD; then
   echo ""
-  warn "After installing plugins, run:"
-  info "/reload-plugins"
-  info "/codex:setup"
-  info "/copilot:setup"
+  info "After installing plugins, run /reload-plugins, then the setup command"
+  info "for each installed plugin (e.g. /codex:setup or /copilot:setup)."
 fi
 
 echo ""

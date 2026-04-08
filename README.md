@@ -10,7 +10,7 @@ Claude plans, Codex reviews, and tasks are automatically routed to **Codex** (st
 /planning-team <your feature or fix>
         │
         ▼
-   team-lead (Claude)
+   team-lead (orchestrates only — never modifies files directly)
         ├── planner      → creates .claude/plan/<slug>.md
         │                   each task annotated: executor: codex | copilot
         ├── plan-reviewer (Codex)
@@ -22,7 +22,7 @@ Claude plans, Codex reviews, and tasks are automatically routed to **Codex** (st
 
 ## Dependencies
 
-Install both plugins in Claude Code first:
+Install at least one plugin in Claude Code (both are optional but recommended):
 
 **Codex plugin** (by OpenAI):
 ```
@@ -39,27 +39,34 @@ Install both plugins in Claude Code first:
 Then reload:
 ```
 /reload-plugins
-/codex:setup
-/copilot:setup
+```
+
+Run setup only for the plugins you installed:
+```
+/codex:setup     # only if codex plugin was installed
+/copilot:setup   # only if copilot plugin was installed
 ```
 
 ## Install This Skill
 
-### Install agent definitions
-
 ```bash
-cp agents/*.md ~/.claude/agents/
+git clone https://github.com/LeePepe/planning-team-skill.git
+cd planning-team-skill
+
+# Global install (agents + skill → ~/.claude/)
+bash scripts/setup.sh --global
+
+# Or project-local install (agents + skill → .claude/ in current repo)
+bash scripts/setup.sh --repo
 ```
 
-### Install the skill
+Check status before or after install:
 
 ```bash
-# Global
-cp SKILL.md ~/.claude/skills/planning-team/SKILL.md
-
-# Or project-level
-cp SKILL.md .claude/skills/planning-team/SKILL.md
+bash scripts/setup.sh --check
 ```
+
+The script installs agent definitions, the skill file, and registers plugin marketplaces in `~/.claude/settings.json`. In `--repo` mode it also creates a `.claude/team.md` template for per-repo customization.
 
 ## Usage
 
@@ -75,13 +82,7 @@ cp SKILL.md .claude/skills/planning-team/SKILL.md
 
 ### Routing preferences
 
-Copy `templates/team.md` to `.claude/team.md` in your repo:
-
-```bash
-cp templates/team.md /path/to/your/repo/.claude/team.md
-```
-
-Then edit to set routing rules and review mode:
+Run `bash scripts/setup.sh --repo` inside your repo — it copies a `team.md` template to `.claude/team.md` automatically. Then edit it to set routing rules and review mode:
 
 ```markdown
 ## Executor Routing

@@ -1,7 +1,7 @@
 ---
 name: team-lead
 description: Global team orchestrator. Spawns planner, plan-reviewer (Codex), and routes approved tasks to codex-coder or copilot based on task type. Per-repo .claude/agents/ can provide repo-specific versions of these two executors.
-tools: Read, Glob, Bash, Agent
+tools: Read, Glob, Agent
 ---
 
 # Team Lead
@@ -43,11 +43,7 @@ Routing preferences in `.claude/team.md` override the defaults above.
 
 ### Step 1: Read Repo Config
 
-```bash
-REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
-```
-
-Read if present:
+Use Glob to locate the repo root, then read if present:
 - `$REPO_ROOT/.claude/team.md` — extract routing preferences and review mode
 - `$REPO_ROOT/.claude/agents/codex-coder.md` — project version overrides global if present
 - `$REPO_ROOT/.claude/agents/copilot.md` — project version overrides global if present
@@ -122,7 +118,9 @@ fi
 - Must wait for reviewer approval before executing tasks
 - Tasks with sequential dependencies must not run in parallel
 - Only two valid executor values: `codex-coder` and `copilot`
-- Never modify code directly — only orchestrate other agents
+- **NEVER modify, create, or delete any project file** — file changes are exclusively the responsibility of executor agents (`codex-coder`, `copilot`)
+- **NEVER skip the planner step** — even for "simple" tasks, always spawn planner first
+- Any direct file change by team-lead is a pipeline violation
 
 ## As an Agent Team Teammate
 
