@@ -1,20 +1,21 @@
 ---
 name: planning-team
-description: Orchestrate a full planning + review + execution pipeline using a team of specialized agents. Use this whenever a task spans multiple files, involves a non-trivial feature or refactor, needs a plan reviewed before any code is written, or would benefit from parallel execution across Codex and Copilot. Trigger phrases include: "use the planning team", "plan and implement", "create an agent team", "multi-agent workflow", or any complex implementation request where upfront planning matters.
+description: Coordinate a full plan-review-execute pipeline with specialized agents (`team-lead`, `planner`, `plan-reviewer`, `codex-coder`, `copilot`). Use when work spans multiple files, requires a reviewed plan before coding, or benefits from parallel execution with explicit Codex/Copilot routing. Trigger on requests like "use the planning team", "plan then implement", "multi-agent workflow", "/planning-team setup", or "/planning-team implement auth middleware".
 ---
 
 # Planning Team Skill
 
-Orchestrate a structured multi-agent pipeline: Claude plans, Codex reviews the plan, and tasks are automatically routed to the right executor (Codex for strict/formal work, Copilot for everything else).
+Run a structured multi-agent pipeline: planner writes a plan, plan-reviewer gates quality, then executors implement approved tasks.
 
 ## Dependencies
 
-Both plugins must be installed in Claude Code before using this skill:
+Install both plugins in Claude Code before running this skill:
 
-- **[codex-plugin-cc](https://github.com/openai/codex-plugin-cc)** — Codex CLI integration (`/codex:rescue`, `/codex:review`)
-- **[copilot-plugin-cc](https://github.com/LeePepe/copilot-plugin-cc)** — Local Copilot CLI integration (`/copilot:rescue`, `/copilot:review`)
+- **[codex-plugin-cc](https://github.com/openai/codex-plugin-cc)** for Codex rescue/review integration
+- **[copilot-plugin-cc](https://github.com/LeePepe/copilot-plugin-cc)** for local Copilot rescue integration
 
-Install with:
+Use these commands:
+
 ```bash
 /plugin marketplace add openai/codex-plugin-cc
 /plugin install codex@openai-codex
@@ -25,76 +26,56 @@ Install with:
 /reload-plugins
 ```
 
-## When to Use
+## Triggers
 
-- You have a non-trivial feature or refactor that spans multiple files
-- You want a plan reviewed before any code is written
-- You want parallel execution across Codex and Copilot
-- You want per-repo control over which executor handles which file types
-
-## Trigger
-
-```
-/planning-team setup [--global|--repo]   # install everything
-/planning-team <description>              # run the pipeline
+```text
+/planning-team setup [--global|--repo]
+/planning-team <description>
 ```
 
-Or natural language:
-```
+Natural language trigger:
+
+```text
 Use the planning team to implement <feature>
 ```
 
 ## Setup
 
-When the user invokes `/planning-team setup` (or asks to set up the planning team):
+When the user asks for `/planning-team setup`, perform these steps.
 
-### Step 1 — Find the skill directory
+### 1) Locate the skill directory
 
 ```bash
 SKILL_DIR=$(find ~/.claude/skills ~/Development -name "planning-team-skill" -maxdepth 4 -type d 2>/dev/null | head -1)
 if [ -z "$SKILL_DIR" ]; then
-  # Clone from GitHub
   git clone https://github.com/LeePepe/planning-team-skill.git /tmp/planning-team-skill
   SKILL_DIR="/tmp/planning-team-skill"
 fi
 ```
 
-### Step 2 — Run the setup script
+### 2) Run status check and install
 
 ```bash
 bash "$SKILL_DIR/scripts/setup.sh" --check
-```
-
-Parse the output to identify what's missing: agents, skill file, plugins.
-
-Then run the installer with the appropriate mode:
-- If the user said `--repo` or is inside a git repo and wants project-local setup → `--repo`
-- Otherwise → `--global` (default)
-
-```bash
 bash "$SKILL_DIR/scripts/setup.sh" [--global|--repo]
 ```
 
-### Step 3 — Install missing plugins
+Pick install mode with this rule:
 
-If the setup script reports plugins as not installed, invoke the plugin commands:
+- Use `--repo` when the user wants project-local install and current shell is inside a git repo.
+- Use `--global` otherwise.
 
-For codex plugin (if missing):
-```
+### 3) Install missing plugins
+
+If the check output reports missing plugins, run:
+
+```text
 /plugin install codex@openai-codex
-```
-
-For copilot plugin (if missing):
-```
 /plugin install copilot@copilot-local
-```
-
-If any plugin was installed:
-```
 /reload-plugins
 ```
 
-### Step 4 — Verify
+### 4) Verify setup
 
 ```bash
 bash "$SKILL_DIR/scripts/setup.sh" --check
@@ -102,22 +83,22 @@ node $(find ~/.claude/plugins -name "codex-companion.mjs" | head -1) setup --jso
 node $(find ~/.claude/plugins -name "copilot-companion.mjs" | head -1) setup --json 2>/dev/null
 ```
 
-Report the final status clearly: what's installed, what (if anything) still needs attention.
+Report clear status: installed components and remaining gaps.
 
-## What It Does
+## Pipeline
 
-```
+```text
 team-lead
-  ├── planner        → .claude/plan/<slug>.md  (with executor annotations)
-  ├── plan-reviewer  → Codex reviews the plan (regular or adversarial)
+  ├── planner        → writes .claude/plan/<slug>.md with executor annotations
+  ├── plan-reviewer  → reviews plan (review or adversarial-review)
   └── executors (parallel where possible):
-        executor: codex   → codex-coder  (via /codex:rescue)
-        executor: copilot → copilot      (via /copilot:rescue)
+        executor: codex   → codex-coder
+        executor: copilot → copilot
 ```
 
 ## Workflow
 
-### Step 1 — Check dependencies
+### 1) Validate plugin readiness
 
 ```bash
 # Verify codex plugin
@@ -127,45 +108,48 @@ node $(find ~/.claude/plugins -name "codex-companion.mjs" | head -1) setup --jso
 node $(find ~/.claude/plugins -name "copilot-companion.mjs" | head -1) setup --json
 ```
 
-If either plugin is missing or unavailable, stop and tell the user what to install.
+Stop and request installation if either plugin is unavailable.
 
-### Step 2 — Read repo config
+### 2) Read repo routing config
 
 ```bash
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
 cat "$REPO_ROOT/.claude/team.md" 2>/dev/null
 ```
 
-If `.claude/team.md` exists, extract:
-- Executor routing overrides (which file types go to codex vs copilot)
+If `.claude/team.md` exists, read:
+
+- Executor routing overrides
 - Preferred review mode (`review` or `adversarial-review`)
 
-### Step 3 — Invoke team-lead agent
+### 3) Delegate orchestration to `team-lead`
 
-Delegate to the `team-lead` agent with the user's request and any routing preferences from `.claude/team.md`:
+Pass:
 
-```
+```text
 Agent: team-lead
 Prompt: <user's description>
         Routing preferences: <from .claude/team.md, or "use defaults">
 ```
 
-The team-lead handles the full pipeline:
-1. Calls `planner` → creates the plan with `executor: codex|copilot` per task
-2. Calls `plan-reviewer` → Codex reviews (mode decided by team-lead based on plan size)
-3. Routes approved tasks to `codex-coder` or `copilot` executor agents
+Let `team-lead` run:
 
-### Step 4 — Report
+1. `planner` creates the plan
+2. `plan-reviewer` reviews and iterates plan quality
+3. executors implement approved tasks
 
-Present the team-lead's summary:
-- Plan file location
-- Files changed per executor
-- Any failed or skipped tasks
-- Recommended follow-up steps
+### 4) Report outcome
+
+Return:
+
+- plan path
+- modified files grouped by executor
+- failed/skipped tasks
+- follow-up actions
 
 ## Per-Repo Customization
 
-Drop a `.claude/team.md` in your repo to override defaults:
+Drop a `.claude/team.md` in the repo to override defaults:
 
 ```markdown
 ## Executor Routing
@@ -177,9 +161,10 @@ Drop a `.claude/team.md` in your repo to override defaults:
 default: adversarial-review
 ```
 
-Or add project-specific executor agents to `.claude/agents/`:
-- `.claude/agents/codex-coder.md` — repo-aware Codex executor (knows your TS conventions)
-- `.claude/agents/copilot.md` — repo-aware Copilot executor (knows your xcodebuild commands)
+Optionally provide project-specific executor prompts in `.claude/agents/`:
+
+- `.claude/agents/codex-coder.md`
+- `.claude/agents/copilot.md`
 
 Project-level agents automatically take priority over global ones.
 
@@ -190,28 +175,23 @@ Project-level agents automatically take priority over global ones.
 | `codex` | TypeScript/JS, APIs, types, tests, DB migrations, algorithms, business logic |
 | `copilot` | Swift/SwiftUI, Kotlin/Android, UI, exploratory refactoring, platform code, scripts |
 
-## Agent Definitions
+## Constraints
 
-This skill ships with the following agent definitions (install to `~/.claude/agents/`):
+- Keep task routing values to `codex` or `copilot`.
+- Require review pass before any execution phase.
+- Keep planner and reviewer scoped to plan files; avoid direct project-code edits there.
+- Keep executor prompts concrete: scope, dependencies, verification.
 
-- `team-lead.md` — orchestrator
-- `planner.md` — plan creator with executor annotations
-- `plan-reviewer.md` — Codex-powered plan reviewer
-- `codex-coder.md` — Codex executor
-- `copilot.md` — Copilot executor
+## Shipped Agents
 
-See the `agents/` directory for definitions. Copy to `~/.claude/agents/` or use the install script.
+- `team-lead.md`
+- `planner.md`
+- `plan-reviewer.md`
+- `codex-coder.md`
+- `copilot.md`
 
-## Install Agents
+Install manually when needed:
 
 ```bash
-# Copy agent definitions to global agents directory
 cp agents/*.md ~/.claude/agents/
-```
-
-Or symlink for live updates:
-```bash
-for f in agents/*.md; do
-  ln -sf "$(pwd)/$f" ~/.claude/agents/$(basename $f)
-done
 ```
