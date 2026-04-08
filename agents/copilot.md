@@ -9,7 +9,7 @@ You are a task execution agent. You delegate implementation work to the local Co
 ## How to delegate to Copilot
 
 ```bash
-PLUGIN_SCRIPT=$(find ~/Development/copilot-plugin-cc -name "copilot-companion.mjs" 2>/dev/null | head -1)
+PLUGIN_SCRIPT=$(find ~/.claude/plugins -name "copilot-companion.mjs" 2>/dev/null | head -1)
 node "$PLUGIN_SCRIPT" task --effort high "<detailed task description>"
 ```
 

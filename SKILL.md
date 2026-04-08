@@ -1,6 +1,6 @@
 ---
 name: planning-team
-description: Orchestrate a full planning + review + execution pipeline using a team of agents. Claude plans, Codex reviews, and tasks are routed to Codex or Copilot based on type. Depends on codex-plugin-cc and copilot-plugin-cc.
+description: Orchestrate a full planning + review + execution pipeline using a team of specialized agents. Use this whenever a task spans multiple files, involves a non-trivial feature or refactor, needs a plan reviewed before any code is written, or would benefit from parallel execution across Codex and Copilot. Trigger phrases include: "use the planning team", "plan and implement", "create an agent team", "multi-agent workflow", or any complex implementation request where upfront planning matters.
 ---
 
 # Planning Team Skill
