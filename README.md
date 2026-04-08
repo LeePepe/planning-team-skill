@@ -51,21 +51,21 @@ Run setup only for the plugins you installed:
 
 ```
 /plugin marketplace add LeePepe/planning-team-skill
-/plugin install planning-team-skill@LeePepe
+/plugin install planning-team@LeePepe
 /reload-plugins
 ```
 
 Then run setup (`--repo` by default, or pass `--global` for global install):
 
 ```
-/planning-team-skill:setup
-/planning-team-skill:setup --global
+/planning-team:setup
+/planning-team:setup --global
 ```
 
 Check status at any time:
 
 ```
-/planning-team-skill:setup --check
+/planning-team:setup --check
 ```
 
 ### Manual install (without the plugin system)

@@ -1,5 +1,5 @@
 {
-  "name": "planning-team-skill",
+  "name": "planning-team",
   "description": "Plan → review → execute pipeline with team-lead, planner, plan-reviewer, codex-coder, and copilot agents.",
   "version": "0.1.0",
   "author": {

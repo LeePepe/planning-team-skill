@@ -1,6 +1,5 @@
 ---
-name: setup
-description: Install planning-team-skill agents and skill file. Run after installing the plugin. Pass --global or --repo (default) to select install scope, or --check to inspect status.
+description: Install planning-team agents and skill file into your repo or global ~/.claude/. Pass --global for a global install or --check to inspect current status.
 argument-hint: "[--global|--repo|--check]"
 allowed-tools: Bash
 ---

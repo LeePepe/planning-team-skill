@@ -1,6 +1,6 @@
 ---
 name: planning-team
-description: Coordinate a full plan-review-execute pipeline with specialized agents (`team-lead`, `planner`, `plan-reviewer`, `codex-coder`, `copilot`). Use when work spans multiple files, requires a reviewed plan before coding, or benefits from parallel execution with explicit Codex/Copilot routing. Trigger on requests like "use the planning team", "plan then implement", "multi-agent workflow", "/planning-team setup", or "/planning-team implement auth middleware".
+description: Coordinate a full plan-review-execute pipeline with specialized agents (`team-lead`, `planner`, `plan-reviewer`, `codex-coder`, `copilot`). Use when work spans multiple files, requires a reviewed plan before coding, or benefits from parallel execution with explicit Codex/Copilot routing. Trigger on requests like "use the planning team", "plan then implement", "multi-agent workflow", or "/planning-team implement auth middleware".
 ---
 
 # Planning Team Skill
@@ -29,7 +29,6 @@ Use these commands:
 ## Triggers
 
 ```text
-/planning-team setup [--global|--repo]
 /planning-team <description>
 ```
 
@@ -39,51 +38,7 @@ Natural language trigger:
 Use the planning team to implement <feature>
 ```
 
-## Setup
-
-When the user asks for `/planning-team setup`, perform these steps.
-
-### 1) Locate the skill directory
-
-```bash
-SKILL_DIR=$(find ~/.claude/skills ~/Development -name "planning-team-skill" -maxdepth 4 -type d 2>/dev/null | head -1)
-if [ -z "$SKILL_DIR" ]; then
-  git clone https://github.com/LeePepe/planning-team-skill.git /tmp/planning-team-skill
-  SKILL_DIR="/tmp/planning-team-skill"
-fi
-```
-
-### 2) Run status check and install
-
-```bash
-bash "$SKILL_DIR/scripts/setup.sh" --check
-bash "$SKILL_DIR/scripts/setup.sh" [--global|--repo]
-```
-
-Pick install mode with this rule:
-
-- Use `--repo` when the user wants project-local install and current shell is inside a git repo.
-- Use `--global` otherwise.
-
-### 3) Install missing plugins
-
-If the check output reports missing plugins, run:
-
-```text
-/plugin install codex@openai-codex
-/plugin install copilot@copilot-local
-/reload-plugins
-```
-
-### 4) Verify setup
-
-```bash
-bash "$SKILL_DIR/scripts/setup.sh" --check
-node $(find ~/.claude/plugins -name "codex-companion.mjs" | head -1) setup --json 2>/dev/null
-node $(find ~/.claude/plugins -name "copilot-companion.mjs" | head -1) setup --json 2>/dev/null
-```
-
-Report clear status: installed components and remaining gaps.
+> To install or check status, use `/planning-team:setup` (available after installing this plugin).
 
 ## Pipeline
 
