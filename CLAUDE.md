@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Repo Is
 
-A Claude Code skill (`SKILL.md`) plus five agent definitions (`agents/`) that implement a structured **plan → review → execute** pipeline. There is no compiled output — the "artifacts" are Markdown prompt files that get copied to `~/.claude/` or `.claude/`.
+A Claude Code skill (`SKILL.md`) plus agent definitions (`agents/`) that implement a structured **plan → review → execute → verify → final-review** pipeline. There is no compiled output — the "artifacts" are Markdown prompt files that get copied to `~/.claude/` or `.claude/`.
 
 ## Commands
 
@@ -29,7 +29,7 @@ Always run `--check` before and after modifying setup logic to confirm idempoten
 ### Pipeline Flow
 
 ```
-SKILL.md  →  team-lead  →  planner  →  plan-reviewer  →  codex-coder / copilot
+SKILL.md  →  team-lead  →  planner  →  plan-reviewer  →  codex-coder / copilot  →  verifier  →  final-reviewer
 ```
 
 `SKILL.md` is the skill entry point: it validates plugin availability, reads repo routing config (`.claude/team.md`), then delegates entirely to `team-lead`. The team-lead orchestrates the rest — it **must not modify files directly**.
@@ -43,6 +43,8 @@ SKILL.md  →  team-lead  →  planner  →  plan-reviewer  →  codex-coder / c
 | `plan-reviewer` | Codex-powered plan review/iteration | Plan files only |
 | `codex-coder` | Executes strict/formal tasks (TS/JS, APIs, tests) | Yes |
 | `copilot` | Executes all other tasks (Swift, scripts, UI) | Yes |
+| `verifier` | Runs post-execution verification commands | No |
+| `final-reviewer` | Runs final `/codex:review` gate on working tree | No |
 
 ### Hard Pipeline Rule
 

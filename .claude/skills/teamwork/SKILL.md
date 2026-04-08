@@ -1,11 +1,11 @@
 ---
 name: teamwork
-description: Coordinate a full plan-review-execute-verify pipeline with specialized agents (`team-lead`, `planner`, `plan-reviewer`, `codex-coder`, `copilot`, `verifier`). Use when work spans multiple files, requires a reviewed plan before coding, or benefits from parallel execution with explicit Codex/Copilot routing and verification gating.
+description: Coordinate a full plan-review-execute-verify-final-review pipeline with specialized agents (`team-lead`, `planner`, `plan-reviewer`, `codex-coder`, `copilot`, `verifier`, `final-reviewer`). Use when work spans multiple files, requires a reviewed plan before coding, or benefits from parallel execution with explicit Codex/Copilot routing and review/verification gates.
 ---
 
 # Teamwork Skill
 
-Run a structured multi-agent pipeline: planner writes a plan, plan-reviewer gates quality, executors implement approved tasks, and verifier confirms checks.
+Run a structured multi-agent pipeline: planner writes a plan, plan-reviewer gates quality, executors implement approved tasks, verifier confirms checks, and final-reviewer performs final code review.
 
 ## Dependencies
 
@@ -49,7 +49,8 @@ team-lead
   ├── executors (parallel where possible):
   │     executor: codex   → codex-coder
   │     executor: copilot → copilot
-  └── verifier       → runs post-execution verification gate
+  ├── verifier       → runs post-execution verification gate
+  └── final-reviewer → runs Codex final review gate (`/codex:review`)
 ```
 
 ## Workflow
@@ -101,6 +102,7 @@ Let `team-lead` run:
 2. `plan-reviewer` reviews and iterates plan quality
 3. executors implement approved tasks
 4. `verifier` runs required checks before completion
+5. `final-reviewer` runs Codex final review before completion
 
 ### 4) Report outcome
 
@@ -110,6 +112,7 @@ Return:
 - modified files grouped by executor
 - failed/skipped tasks
 - verification result with command evidence
+- final review result with key findings
 - follow-up actions
 
 ## Per-Repo Customization
@@ -135,6 +138,7 @@ Optionally provide project-specific executor prompts in `.claude/agents/`:
 - `.claude/agents/codex-coder.md`
 - `.claude/agents/copilot.md`
 - `.claude/agents/verifier.md`
+- `.claude/agents/final-reviewer.md`
 
 Project-level agents automatically take priority over global ones.
 
@@ -152,6 +156,7 @@ Route by task weight and rigor requirement, not by language or file type:
 - Keep task routing values to `codex` or `copilot`.
 - Require review pass before any execution phase.
 - Require verification pass (or explicit `needs_manual_verification`) before claiming completion.
+- Require final review pass (or explicit `needs_manual_review`) before claiming completion.
 - Keep planner and reviewer scoped to plan files; avoid direct project-code edits there.
 - Keep executor prompts concrete: scope, dependencies, verification.
 
@@ -163,6 +168,7 @@ Route by task weight and rigor requirement, not by language or file type:
 - `codex-coder.md`
 - `copilot.md`
 - `verifier.md`
+- `final-reviewer.md`
 
 Install manually when needed:
 

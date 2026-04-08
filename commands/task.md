@@ -1,5 +1,5 @@
 ---
-description: Run a task through the full plan → review → execute → verify pipeline. Pass your task description as the argument.
+description: Run a task through the full plan → review → execute → verify → final-review pipeline. Pass your task description as the argument.
 argument-hint: "<task description>"
 allowed-tools: Bash, Agent
 ---
@@ -60,4 +60,5 @@ Return:
 - Modified files grouped by executor
 - Failed or skipped tasks
 - Verification result and command evidence
+- Final review result and key findings
 - Suggested follow-up actions

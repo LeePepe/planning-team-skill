@@ -1,6 +1,6 @@
 # Teamwork Skill for Claude Code
 
-A Claude Code skill that orchestrates a full **plan → review → execute → verify** pipeline using a team of agents.
+A Claude Code skill that orchestrates a full **plan → review → execute → verify → final-review** pipeline using a team of agents.
 
 Claude plans, Codex reviews, and tasks are automatically routed to **Codex** (rigorous/heavy work) or **Copilot** (everything else).
 
@@ -18,7 +18,8 @@ Claude plans, Codex reviews, and tasks are automatically routed to **Codex** (ri
         ├── executors (parallel where possible)
         │     codex-coder  ← rigorous/heavy tasks (algorithms, security, migrations, critical logic)
         │     copilot      ← all other tasks (UI, scripts, config, simple features)
-        └── verifier       → runs verification commands before completion
+        ├── verifier       → runs verification commands before completion
+        └── final-reviewer → runs final Codex review before completion
 ```
 
 ## Dependencies
@@ -137,6 +138,7 @@ Add repo-aware agent definitions to `.claude/agents/` in your repo:
 - `.claude/agents/codex-coder.md` — knows your TS conventions, test setup, etc.
 - `.claude/agents/copilot.md` — knows your xcodebuild commands, project structure, etc.
 - `.claude/agents/verifier.md` — enforces repo-specific verification strategy and output style
+- `.claude/agents/final-reviewer.md` — runs final review policy via `/codex:review`
 
 Project-level agents automatically override global ones.
 

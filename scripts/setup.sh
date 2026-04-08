@@ -75,7 +75,7 @@ if $CHECK_ONLY; then
   fi
   echo ""
   echo "Agents ($AGENTS_DIR):"
-  for agent in team-lead planner plan-reviewer codex-coder copilot verifier; do
+  for agent in team-lead planner plan-reviewer codex-coder copilot verifier final-reviewer; do
     [ -f "$AGENTS_DIR/$agent.md" ] \
       && ok "  $agent.md" \
       || fail "  $agent.md missing"

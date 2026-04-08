@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "teamwork",
-      "description": "Plan → review → execute → verify pipeline with team-lead, planner, plan-reviewer, codex-coder, copilot, and verifier agents.",
+      "description": "Plan → review → execute → verify → final-review pipeline with team-lead, planner, plan-reviewer, codex-coder, copilot, verifier, and final-reviewer agents.",
       "source": {
         "source": "github",
         "repo": "LeePepe/teamwork"
