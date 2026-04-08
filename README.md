@@ -52,6 +52,7 @@ Run setup only for the plugins you installed:
 ```
 /plugin marketplace add LeePepe/planning-team-skill
 /plugin install planning-team-skill@LeePepe
+/reload-plugins
 ```
 
 Then run setup (global by default, or pass `--repo` for project-local):
