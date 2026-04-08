@@ -1,4 +1,4 @@
 interface:
-  display_name: "Planning Team"
+  display_name: "Teamwork"
   short_description: "Plan, review, and route complex implementation work"
-  default_prompt: "Use $planning-team to break this request into a reviewed plan and execute it with Codex/Copilot routing."
+  default_prompt: "Use $teamwork to break this request into a reviewed plan and execute it with Codex/Copilot routing."

@@ -19,7 +19,9 @@ You convert user requirements into an executable plan file for the team.
 - file scope
 - dependencies
 - verification
-- `executor: codex|copilot` (only valid values)
+- `executor: codex|copilot` — route by task weight/rigor, not language:
+    - `codex`: rigorous or heavy tasks (complex algorithms, security-sensitive code, auth/authz, data migrations, strict correctness requirements, large-scale refactors, critical business logic, tasks needing deep analysis)
+    - `copilot`: all other tasks (UI changes, simple features, scripts, config, exploratory code, docs, straightforward bug fixes)
 - `parallel_group` for parallel-safe tasks
 4. Write plan to:
 - repo: `.claude/plan/<slug>.md`

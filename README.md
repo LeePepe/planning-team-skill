@@ -1,13 +1,13 @@
-# Planning Team Skill for Claude Code
+# Teamwork Skill for Claude Code
 
 A Claude Code skill that orchestrates a full **plan → review → execute** pipeline using a team of agents.
 
-Claude plans, Codex reviews, and tasks are automatically routed to **Codex** (strict/formal work) or **Copilot** (everything else).
+Claude plans, Codex reviews, and tasks are automatically routed to **Codex** (rigorous/heavy work) or **Copilot** (everything else).
 
 ## How It Works
 
 ```
-/planning-team <your feature or fix>
+/teamwork:task <your feature or fix>
         │
         ▼
    team-lead (orchestrates only — never modifies files directly)
@@ -16,8 +16,8 @@ Claude plans, Codex reviews, and tasks are automatically routed to **Codex** (st
         ├── plan-reviewer (Codex)
         │                → reviews or adversarially challenges the plan
         └── executors (parallel where possible)
-              codex-coder  ← TypeScript, APIs, tests, business logic
-              copilot      ← Swift, Kotlin, UI, scripts, platform code
+              codex-coder  ← rigorous/heavy tasks (algorithms, security, migrations, critical logic)
+              copilot      ← all other tasks (UI, scripts, config, simple features)
 ```
 
 ## Dependencies
@@ -50,29 +50,29 @@ Run setup only for the plugins you installed:
 ## Install This Skill
 
 ```
-/plugin marketplace add LeePepe/planning-team-skill
-/plugin install planning-team@LeePepe
+/plugin marketplace add LeePepe/teamwork
+/plugin install teamwork@LeePepe
 /reload-plugins
 ```
 
 Then run setup (`--repo` by default, or pass `--global` for global install):
 
 ```
-/planning-team:setup
-/planning-team:setup --global
+/teamwork:setup
+/teamwork:setup --global
 ```
 
 Check status at any time:
 
 ```
-/planning-team:setup --check
+/teamwork:setup --check
 ```
 
 ### Manual install (without the plugin system)
 
 ```bash
-git clone https://github.com/LeePepe/planning-team-skill.git
-cd planning-team-skill
+git clone https://github.com/LeePepe/teamwork.git
+cd teamwork
 bash scripts/setup.sh            # defaults to --repo (project-local)
 bash scripts/setup.sh --global   # install globally to ~/.claude
 ```
@@ -80,11 +80,11 @@ bash scripts/setup.sh --global   # install globally to ~/.claude
 ## Usage
 
 ```
-/planning-team implement a JWT auth middleware for the Express API
+/teamwork:task implement a JWT auth middleware for the Express API
 ```
 
 ```
-/planning-team refactor the payment module to use the new Stripe SDK
+/teamwork:task refactor the payment module to use the new Stripe SDK
 ```
 
 ## Troubleshooting
@@ -130,16 +130,16 @@ default: adversarial-review
 Add repo-aware agent definitions to `.claude/agents/` in your repo:
 
 - `.claude/agents/codex-coder.md` — knows your TS conventions, test setup, etc.
-- `.claude/agents/copilot.md` — knows your xcodebuild commands, Sapphire structure, etc.
+- `.claude/agents/copilot.md` — knows your xcodebuild commands, project structure, etc.
 
 Project-level agents automatically override global ones.
 
 ## Executor Routing Defaults
 
-| Executor | Handles |
-|----------|---------|
-| `codex` | TypeScript/JS · APIs · types · tests · DB migrations · algorithms |
-| `copilot` | Swift/SwiftUI · Kotlin/Android · UI · scripts · exploratory refactoring |
+| Executor | When to use |
+|----------|-------------|
+| `codex` | Rigorous or heavy tasks: complex algorithms, security-sensitive code, auth/authz, data migrations, strict correctness requirements, large-scale refactors, critical business logic |
+| `copilot` | All other tasks: UI changes, simple features, scripts, config, exploratory code, docs, straightforward bug fixes |
 
 ## Related
 

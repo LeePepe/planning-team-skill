@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# setup.sh — Install planning-team-skill agents, skill file, and register plugin marketplaces.
+# setup.sh — Install teamwork agents, skill file, and register plugin marketplaces.
 #
 # Usage:
 #   ./scripts/setup.sh [--global] [--repo] [--check]
@@ -40,11 +40,11 @@ if [ "$MODE" = "repo" ]; then
     exit 1
   fi
   AGENTS_DIR="$REPO_ROOT/.claude/agents"
-  SKILL_DEST="$REPO_ROOT/.claude/skills/planning-team"
+  SKILL_DEST="$REPO_ROOT/.claude/skills/teamwork"
   TEAM_MD="$REPO_ROOT/.claude/team.md"
 else
   AGENTS_DIR="$HOME/.claude/agents"
-  SKILL_DEST="$HOME/.claude/skills/planning-team"
+  SKILL_DEST="$HOME/.claude/skills/teamwork"
   TEAM_MD=""
 fi
 
@@ -65,7 +65,7 @@ check_plugin "copilot" "copilot-local" && COPILOT_OK=true || true
 
 # ── Check mode ───────────────────────────────────────────────────────────────
 if $CHECK_ONLY; then
-  echo "=== Planning Team Skill — Status ==="
+  echo "=== Teamwork Skill — Status ==="
   echo ""
   echo "Plugins (at least one required):"
   $CODEX_OK   && ok "  codex plugin installed"   || warn "  codex plugin not installed (optional)"
@@ -87,7 +87,7 @@ if $CHECK_ONLY; then
 fi
 
 # ── Install agents ───────────────────────────────────────────────────────────
-echo "=== Installing Planning Team Skill ==="
+echo "=== Installing Teamwork Skill ==="
 echo ""
 echo "Mode: $MODE"
 echo ""

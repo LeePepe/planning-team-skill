@@ -1,5 +1,5 @@
 ---
-description: Install planning-team agents and skill file into your repo or global ~/.claude/. Pass --global for a global install or --check to inspect current status.
+description: Install teamwork agents and skill file into your repo or global ~/.claude/. Pass --global for a global install or --check to inspect current status.
 argument-hint: "[--global|--repo|--check]"
 allowed-tools: Bash
 ---

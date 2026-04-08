@@ -3,7 +3,7 @@
 ## Project Structure & Module Organization
 This repository ships a Claude Code skill plus agent definitions.
 
-- `SKILL.md`: core planning-team skill behavior and workflow.
+- `SKILL.md`: core teamwork skill behavior and workflow.
 - `agents/`: role-specific agent prompts (`team-lead.md`, `planner.md`, `plan-reviewer.md`, `codex-coder.md`, `copilot.md`).
 - `scripts/setup.sh`: installer/checker for global (`~/.claude`) or repo-local (`.claude`) setup.
 - `templates/team.md`: template for per-repo routing and review preferences.
@@ -15,7 +15,7 @@ Keep new role prompts in `agents/` and reusable config defaults in `templates/`.
 There is no compile/build step; validation is script-driven.
 
 - `bash scripts/setup.sh --check`: verify plugin, agent, and skill installation status.
-- `bash scripts/setup.sh --global`: install to `~/.claude/agents` and `~/.claude/skills/planning-team`.
+- `bash scripts/setup.sh --global`: install to `~/.claude/agents` and `~/.claude/skills/teamwork`.
 - `bash scripts/setup.sh --repo`: install to current repo’s `.claude/` directory.
 - `bash -n scripts/setup.sh`: quick shell syntax check before committing script changes.
 
