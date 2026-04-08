@@ -87,6 +87,29 @@ bash scripts/setup.sh --global   # install globally to ~/.claude
 /planning-team refactor the payment module to use the new Stripe SDK
 ```
 
+## Troubleshooting
+
+### `529 overloaded_error` on simple prompts (for example `hi`)
+
+This is usually an upstream model capacity error, but large startup context can make it more likely.
+
+If this appears right after installing this skill:
+
+1. Re-run setup so the latest (lighter) agent prompts are installed:
+   ```bash
+   bash scripts/setup.sh --repo
+   ```
+2. Verify status:
+   ```bash
+   bash scripts/setup.sh --check
+   ```
+3. Retry once or twice (the error is often transient).
+4. As a quick diagnostic, run:
+   ```bash
+   claude -p "hi" --disable-slash-commands
+   ```
+   If this succeeds consistently while normal mode fails, your loaded skills/agents context is likely too heavy.
+
 ## Per-Repo Customization
 
 ### Routing preferences
