@@ -74,6 +74,24 @@ Then run setup (`--repo` by default, or pass `--global` for global install):
 /teamwork:setup --global
 ```
 
+Setup now uses a lightweight default:
+- Preloads only `team-lead` into `.claude/agents`
+- Stores all other teamwork agents in `.claude/skills/teamwork/agents` and lazy-loads them when `/teamwork:task` runs
+
+If you prefer legacy behavior (preload all agents), use:
+
+```bash
+bash scripts/setup.sh --repo --full-agents
+```
+
+If you want ultra-light mode (no preloaded agents at all), use:
+
+```bash
+bash scripts/setup.sh --repo --ultra-light
+```
+
+In ultra-light mode, `/teamwork:task` injects `team-lead` temporarily and cleans it up after the run.
+
 Check status at any time:
 
 ```
@@ -115,8 +133,17 @@ If this appears right after installing this skill:
    ```bash
    bash scripts/setup.sh --check
    ```
-3. Retry once or twice (the error is often transient).
-4. As a quick diagnostic, run:
+3. Check for recursive teamwork plugin cache growth:
+   ```bash
+   find ~/.claude/plugins/cache/teamwork -type d -path "*/teamwork/*/teamwork/*" | head
+   ```
+   If this prints paths, clean cache:
+   ```bash
+   rm -rf ~/.claude/plugins/cache/teamwork
+   ```
+   Then run `/reload-plugins` in Claude Code.
+4. Retry once or twice (the error is often transient).
+5. As a quick diagnostic, run:
    ```bash
    claude -p "hi" --disable-slash-commands
    ```

@@ -38,6 +38,10 @@ Natural language trigger:
 Use teamwork to implement <feature>
 ```
 
+Activation safety:
+- Only activate this skill for explicit teamwork intent (`/teamwork:task ...` or clear request to "use teamwork").
+- Do not activate for casual chat, greetings, or unrelated prompts.
+
 > To install or check status, use `/teamwork:setup` (available after installing this plugin).
 
 ## Pipeline

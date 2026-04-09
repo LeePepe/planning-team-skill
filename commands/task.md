@@ -30,6 +30,38 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
 [ -n "$REPO_ROOT" ] && cat "$REPO_ROOT/.claude/team.md" 2>/dev/null || echo "(no team.md)"
 ```
 
+## Step 2.5 — Ensure `team-lead` is available (ultra-light compatible)
+
+Run:
+
+```bash
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || true)
+TARGET="${REPO_ROOT:-$HOME}/.claude/agents"
+TEAM_LEAD_PATH="$TARGET/team-lead.md"
+TEAM_LEAD_TEMP=false
+
+mkdir -p "$TARGET"
+
+if [ ! -f "$TEAM_LEAD_PATH" ]; then
+  for src in \
+    "$REPO_ROOT/.claude/skills/teamwork/agents/team-lead.md" \
+    "$HOME/.claude/skills/teamwork/agents/team-lead.md" \
+    "${CLAUDE_PLUGIN_ROOT}/agents/team-lead.md"
+  do
+    if [ -n "$src" ] && [ -f "$src" ]; then
+      cp "$src" "$TEAM_LEAD_PATH"
+      TEAM_LEAD_TEMP=true
+      break
+    fi
+  done
+fi
+
+[ -f "$TEAM_LEAD_PATH" ] || { echo "team_lead=missing"; exit 1; }
+echo "team_lead=ok path=$TEAM_LEAD_PATH temp=$TEAM_LEAD_TEMP"
+```
+
+If this step prints `team_lead=missing`, stop and tell the user to run `/teamwork:setup` first.
+
 ## Step 3 — Delegate to team-lead
 
 From the output of Step 1, read the actual `codex=true/false` and `copilot=true/false` values.
@@ -51,6 +83,10 @@ Claude fallback model policy: lead selects `haiku|sonnet|opus` when both plugins
 ```
 
 ## Step 4 — Report outcome
+
+Before returning the summary:
+- read `path=<...> temp=<true|false>` from Step 2.5 output
+- if `temp=true`, run `rm -f "<path>"` to restore ultra-light baseline
 
 Return:
 - Research split strategy and consolidated result summary (or `research_unavailable`)

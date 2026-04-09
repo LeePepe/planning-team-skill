@@ -2,17 +2,20 @@
 # setup.sh — Install teamwork agents, skill file, and register plugin marketplaces.
 #
 # Usage:
-#   ./scripts/setup.sh [--global] [--repo] [--check]
+#   ./scripts/setup.sh [--global] [--repo] [--check] [--full-agents] [--ultra-light]
 #
 #   --global   Install agents and skill to ~/.claude/
 #   --repo     Install agents and skill to .claude/ in current git repo (default)
 #   --check    Only check status, don't install anything
+#   --full-agents  Preload all runtime agents into .claude/agents (legacy mode)
+#   --ultra-light  Preload no agents; /teamwork:task injects team-lead on demand
 
 set -euo pipefail
 
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SETTINGS="$HOME/.claude/settings.json"
 PLUGINS_CACHE="$HOME/.claude/plugins/cache"
+TEAMWORK_CACHE_ROOT="$PLUGINS_CACHE/teamwork"
 
 # ── Colors ──────────────────────────────────────────────────────────────────
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
@@ -24,13 +27,31 @@ info() { echo -e "  $*"; }
 # ── Args ─────────────────────────────────────────────────────────────────────
 MODE="repo"
 CHECK_ONLY=false
+FULL_AGENTS=false
+ULTRA_LIGHT=false
 for arg in "$@"; do
   case $arg in
     --global) MODE="global" ;;
     --repo)   MODE="repo" ;;
     --check)  CHECK_ONLY=true ;;
+    --full-agents) FULL_AGENTS=true ;;
+    --ultra-light) ULTRA_LIGHT=true ;;
+    *)
+      fail "Unknown argument: $arg"
+      info "Accepted values: --global, --repo, --check, --full-agents, --ultra-light"
+      exit 1
+      ;;
   esac
 done
+
+if $FULL_AGENTS && $ULTRA_LIGHT; then
+  fail "--full-agents and --ultra-light cannot be used together."
+  exit 1
+fi
+
+BOOTSTRAP_AGENTS=(team-lead)
+RUNTIME_AGENTS=(researcher planner plan-reviewer codex-coder copilot claude-coder verifier final-reviewer git-monitor)
+ALL_AGENTS=("${BOOTSTRAP_AGENTS[@]}" "${RUNTIME_AGENTS[@]}")
 
 # ── Paths ────────────────────────────────────────────────────────────────────
 if [ "$MODE" = "repo" ]; then
@@ -48,23 +69,55 @@ else
   TEAM_MD=""
 fi
 
-# ── Check plugins ────────────────────────────────────────────────────────────
-check_plugin() {
-  local name="$1"
-  local cache_pattern="$2"
-  if ls "$PLUGINS_CACHE/$cache_pattern" 2>/dev/null | grep -q .; then
+# ── Teamwork cache health ─────────────────────────────────────────────────────
+is_running_from_teamwork_cache() {
+  case "$SKILL_DIR" in
+    "$TEAMWORK_CACHE_ROOT"/*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+has_recursive_teamwork_cache() {
+  [ -d "$TEAMWORK_CACHE_ROOT" ] || return 1
+  local hit
+  hit=$(find "$TEAMWORK_CACHE_ROOT" -type d -path "*/teamwork/*/teamwork/*" -print -quit 2>/dev/null || true)
+  [ -n "$hit" ]
+}
+
+maybe_cleanup_recursive_teamwork_cache() {
+  if ! has_recursive_teamwork_cache; then
     return 0
   fi
-  return 1
+
+  echo ""
+  warn "Detected recursive teamwork plugin cache under $TEAMWORK_CACHE_ROOT."
+  warn "This can increase context load and trigger intermittent 529 overloaded_error."
+
+  if is_running_from_teamwork_cache; then
+    info "Running from teamwork plugin cache; skip auto-clean to avoid deleting the active script."
+    info "Manual fix: rm -rf \"$TEAMWORK_CACHE_ROOT\" && /reload-plugins"
+    return 0
+  fi
+
+  rm -rf "$TEAMWORK_CACHE_ROOT"
+  ok "Cleared recursive teamwork cache."
+  info "Reload plugins in Claude Code: /reload-plugins"
+}
+
+# ── Check plugins ────────────────────────────────────────────────────────────
+check_plugin() {
+  local cache_dir="$1"
+  [ -d "$PLUGINS_CACHE/$cache_dir" ]
 }
 
 CODEX_OK=false
 COPILOT_OK=false
-check_plugin "codex" "openai-codex" && CODEX_OK=true || true
-check_plugin "copilot" "copilot-local" && COPILOT_OK=true || true
+check_plugin "openai-codex" && CODEX_OK=true || true
+check_plugin "copilot-local" && COPILOT_OK=true || true
 
 # ── Check mode ───────────────────────────────────────────────────────────────
 if $CHECK_ONLY; then
+  STATUS_OK=true
   echo "=== Teamwork Skill — Status ==="
   echo ""
   echo "Plugins (optional, Claude fallback works without plugins):"
@@ -73,17 +126,35 @@ if $CHECK_ONLY; then
   if ! $CODEX_OK && ! $COPILOT_OK; then
     warn "  Neither plugin is installed — pipeline will fallback to Claude-native execution/review."
   fi
+  if has_recursive_teamwork_cache; then
+    warn "  recursive teamwork plugin cache detected (possible source of intermittent 529 overloaded_error)"
+    info "  Run: bash scripts/setup.sh --repo   # auto-cleans when safe"
+  fi
   echo ""
-  echo "Agents ($AGENTS_DIR):"
-  for agent in team-lead researcher planner plan-reviewer codex-coder copilot claude-coder verifier final-reviewer git-monitor; do
+  echo "Bootstrap agents ($AGENTS_DIR, optional preload):"
+  for agent in "${BOOTSTRAP_AGENTS[@]}"; do
     [ -f "$AGENTS_DIR/$agent.md" ] \
-      && ok "  $agent.md" \
-      || fail "  $agent.md missing"
+      && warn "  $agent.md currently preloaded (higher baseline context)" \
+      || ok "  $agent.md not preloaded"
+  done
+  echo ""
+  echo "Runtime agent bundle ($SKILL_DEST/agents):"
+  for agent in "${ALL_AGENTS[@]}"; do
+    [ -f "$SKILL_DEST/agents/$agent.md" ] \
+      && ok "  $agent.md available for lazy-load" \
+      || { fail "  $agent.md missing in skill bundle"; STATUS_OK=false; }
+  done
+  echo ""
+  echo "Loaded runtime agents ($AGENTS_DIR, optional):"
+  for agent in "${RUNTIME_AGENTS[@]}"; do
+    [ -f "$AGENTS_DIR/$agent.md" ] \
+      && warn "  $agent.md currently loaded (higher baseline context)" \
+      || ok "  $agent.md not preloaded"
   done
   echo ""
   echo "Skill ($SKILL_DEST/SKILL.md):"
-  [ -f "$SKILL_DEST/SKILL.md" ] && ok "  SKILL.md installed" || fail "  SKILL.md missing"
-  exit 0
+  [ -f "$SKILL_DEST/SKILL.md" ] && ok "  SKILL.md installed" || { fail "  SKILL.md missing"; STATUS_OK=false; }
+  $STATUS_OK && exit 0 || exit 1
 fi
 
 # ── Install agents ───────────────────────────────────────────────────────────
@@ -92,12 +163,58 @@ echo ""
 echo "Mode: $MODE"
 echo ""
 
-echo "Installing agent definitions → $AGENTS_DIR/"
+maybe_cleanup_recursive_teamwork_cache
+
 mkdir -p "$AGENTS_DIR"
-for f in "$SKILL_DIR/agents/"*.md; do
-  cp "$f" "$AGENTS_DIR/"
-  ok "  $(basename $f)"
-done
+if $ULTRA_LIGHT; then
+  echo "Ultra-light mode: no preloaded bootstrap agents"
+  for agent in "${BOOTSTRAP_AGENTS[@]}"; do
+    src="$SKILL_DIR/agents/$agent.md"
+    dst="$AGENTS_DIR/$agent.md"
+    if [ -f "$dst" ]; then
+      if cmp -s "$src" "$dst"; then
+        rm -f "$dst"
+        ok "  removed preloaded $agent.md (will inject on /teamwork:task)"
+      else
+        warn "  kept custom $agent.md override"
+      fi
+    else
+      ok "  $agent.md already not preloaded"
+    fi
+  done
+else
+  echo "Installing bootstrap agents → $AGENTS_DIR/"
+  for agent in "${BOOTSTRAP_AGENTS[@]}"; do
+    cp "$SKILL_DIR/agents/$agent.md" "$AGENTS_DIR/$agent.md"
+    ok "  $agent.md"
+  done
+fi
+
+if ! $FULL_AGENTS; then
+  echo ""
+  echo "Pruning preloaded runtime agents (keeps custom overrides):"
+  for agent in "${RUNTIME_AGENTS[@]}"; do
+    src="$SKILL_DIR/agents/$agent.md"
+    dst="$AGENTS_DIR/$agent.md"
+    if [ -f "$dst" ]; then
+      if cmp -s "$src" "$dst"; then
+        rm -f "$dst"
+        ok "  removed preloaded $agent.md (will lazy-load at runtime)"
+      else
+        warn "  kept custom $agent.md override"
+      fi
+    else
+      ok "  $agent.md already not preloaded"
+    fi
+  done
+else
+  echo ""
+  echo "Installing runtime agents (legacy eager-load mode):"
+  for agent in "${RUNTIME_AGENTS[@]}"; do
+    cp "$SKILL_DIR/agents/$agent.md" "$AGENTS_DIR/$agent.md"
+    ok "  $agent.md"
+  done
+fi
 
 # ── Install skill ─────────────────────────────────────────────────────────────
 echo ""
@@ -105,6 +222,11 @@ echo "Installing skill → $SKILL_DEST/"
 mkdir -p "$SKILL_DEST"
 cp "$SKILL_DIR/SKILL.md" "$SKILL_DEST/SKILL.md"
 ok "  SKILL.md"
+mkdir -p "$SKILL_DEST/agents"
+for agent in "${ALL_AGENTS[@]}"; do
+  cp "$SKILL_DIR/agents/$agent.md" "$SKILL_DEST/agents/$agent.md"
+done
+ok "  agents bundle (for lazy-load)"
 
 # ── Install team.md template (repo mode only) ─────────────────────────────────
 if [ "$MODE" = "repo" ] && [ -n "$TEAM_MD" ] && [ ! -f "$TEAM_MD" ]; then

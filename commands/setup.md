@@ -1,15 +1,25 @@
 ---
-description: Install teamwork agents and skill file into your repo or global ~/.claude/. Pass --global for a global install or --check to inspect current status (including researcher/claude-coder/verifier/final-reviewer agents).
-argument-hint: "[--global|--repo|--check]"
+description: Install teamwork skill bundle into your repo or global ~/.claude/. Supports default light mode, legacy eager mode, and ultra-light mode.
+argument-hint: "[--global|--repo|--check|--full-agents|--ultra-light]"
 allowed-tools: Bash
 ---
 
 Validate the argument before running the setup script.
 
-Accepted values for `${ARGUMENTS}` are exactly: `--global`, `--repo`, `--check`, or empty (default `--repo`).
+Accepted values for `${ARGUMENTS}` are:
+- empty (default `--repo`)
+- `--global`
+- `--repo`
+- `--check`
+- `--full-agents`
+- `--ultra-light`
+- `--repo --full-agents`
+- `--global --full-agents`
+- `--repo --ultra-light`
+- `--global --ultra-light`
 
-If the argument is anything other than those three values (or empty), stop immediately and tell the user:
-> Invalid argument. Accepted values are: --global, --repo, --check (or leave blank for the default --repo).
+If the argument is anything else, stop immediately and tell the user:
+> Invalid argument. Accepted values are: --global, --repo, --check, --full-agents, --ultra-light, --repo --full-agents, --global --full-agents, --repo --ultra-light, --global --ultra-light (or leave blank for default --repo).
 
 If the argument is valid (or empty), run:
 
