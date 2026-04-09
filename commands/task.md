@@ -30,7 +30,7 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
 [ -n "$REPO_ROOT" ] && cat "$REPO_ROOT/.claude/team.md" 2>/dev/null || echo "(no team.md)"
 ```
 
-## Step 2.5 — Ensure `team-lead` is available (ultra-light compatible)
+## Step 2.5 — Ensure `team-lead` is available
 
 Run:
 
@@ -86,7 +86,7 @@ Claude fallback model policy: lead selects `haiku|sonnet|opus` when both plugins
 
 Before returning the summary:
 - read `path=<...> temp=<true|false>` from Step 2.5 output
-- if `temp=true`, run `rm -f "<path>"` to restore ultra-light baseline
+- if `temp=true`, run `rm -f "<path>"` to restore baseline
 
 Return:
 - Research split strategy and consolidated result summary (or `research_unavailable`)

@@ -1,6 +1,6 @@
 ---
-description: Install teamwork skill bundle into your repo or global ~/.claude/. Supports default light mode, legacy eager mode, and ultra-light mode.
-argument-hint: "[--global|--repo|--check|--full-agents|--ultra-light]"
+description: Install teamwork skill bundle into your repo or global ~/.claude/. Supports default light mode and legacy eager mode.
+argument-hint: "[--global|--repo|--check|--full-agents]"
 allowed-tools: Bash
 ---
 
@@ -12,14 +12,11 @@ Accepted values for `${ARGUMENTS}` are:
 - `--repo`
 - `--check`
 - `--full-agents`
-- `--ultra-light`
 - `--repo --full-agents`
 - `--global --full-agents`
-- `--repo --ultra-light`
-- `--global --ultra-light`
 
 If the argument is anything else, stop immediately and tell the user:
-> Invalid argument. Accepted values are: --global, --repo, --check, --full-agents, --ultra-light, --repo --full-agents, --global --full-agents, --repo --ultra-light, --global --ultra-light (or leave blank for default --repo).
+> Invalid argument. Accepted values are: --global, --repo, --check, --full-agents, --repo --full-agents, --global --full-agents (or leave blank for default --repo).
 
 If the argument is valid (or empty), run:
 

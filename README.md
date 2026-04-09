@@ -76,21 +76,16 @@ Then run setup (`--repo` by default, or pass `--global` for global install):
 
 Setup now uses a lightweight default:
 - Preloads only `team-lead` into `.claude/agents`
-- Stores all other teamwork agents in `.claude/skills/teamwork/agents` and lazy-loads them when `/teamwork:task` runs
+- Stores all other teamwork agents in `.claude/skills/teamwork/agents` and loads them progressively by stage:
+  - research stage: `researcher`
+  - plan stage: `planner`, `plan-reviewer`
+  - execution stage: executor/gate roles only when needed (`codex-coder`/`copilot`/`claude-coder`, `verifier`, `final-reviewer`, optional `git-monitor`)
 
-If you prefer legacy behavior (preload all agents), use:
+If you prefer legacy behavior (preload all runtime agents), use:
 
 ```bash
 bash scripts/setup.sh --repo --full-agents
 ```
-
-If you want ultra-light mode (no preloaded agents at all), use:
-
-```bash
-bash scripts/setup.sh --repo --ultra-light
-```
-
-In ultra-light mode, `/teamwork:task` injects `team-lead` temporarily and cleans it up after the run.
 
 Check status at any time:
 

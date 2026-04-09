@@ -48,6 +48,10 @@ Activation safety:
 
 ```text
 team-lead
+  ├── progressive load guides
+  │     guide A: research stage  → load researcher only
+  │     guide B: plan stage      → load planner + plan-reviewer only
+  │     guide C: execution stage → load executors/gates only when needed
   ├── researcher(s)  → lead-decided split, parallel when independent, backend: copilot|codex|claude
   │                    outputs are merged into one brief for planner
   ├── planner        → writes .claude/plan/<slug>.md with executor annotations

@@ -2,13 +2,12 @@
 # setup.sh — Install teamwork agents, skill file, and register plugin marketplaces.
 #
 # Usage:
-#   ./scripts/setup.sh [--global] [--repo] [--check] [--full-agents] [--ultra-light]
+#   ./scripts/setup.sh [--global] [--repo] [--check] [--full-agents]
 #
 #   --global   Install agents and skill to ~/.claude/
 #   --repo     Install agents and skill to .claude/ in current git repo (default)
 #   --check    Only check status, don't install anything
 #   --full-agents  Preload all runtime agents into .claude/agents (legacy mode)
-#   --ultra-light  Preload no agents; /teamwork:task injects team-lead on demand
 
 set -euo pipefail
 
@@ -28,26 +27,19 @@ info() { echo -e "  $*"; }
 MODE="repo"
 CHECK_ONLY=false
 FULL_AGENTS=false
-ULTRA_LIGHT=false
 for arg in "$@"; do
   case $arg in
     --global) MODE="global" ;;
     --repo)   MODE="repo" ;;
     --check)  CHECK_ONLY=true ;;
     --full-agents) FULL_AGENTS=true ;;
-    --ultra-light) ULTRA_LIGHT=true ;;
     *)
       fail "Unknown argument: $arg"
-      info "Accepted values: --global, --repo, --check, --full-agents, --ultra-light"
+      info "Accepted values: --global, --repo, --check, --full-agents"
       exit 1
       ;;
   esac
 done
-
-if $FULL_AGENTS && $ULTRA_LIGHT; then
-  fail "--full-agents and --ultra-light cannot be used together."
-  exit 1
-fi
 
 BOOTSTRAP_AGENTS=(team-lead)
 RUNTIME_AGENTS=(researcher planner plan-reviewer codex-coder copilot claude-coder verifier final-reviewer git-monitor)
@@ -166,29 +158,11 @@ echo ""
 maybe_cleanup_recursive_teamwork_cache
 
 mkdir -p "$AGENTS_DIR"
-if $ULTRA_LIGHT; then
-  echo "Ultra-light mode: no preloaded bootstrap agents"
-  for agent in "${BOOTSTRAP_AGENTS[@]}"; do
-    src="$SKILL_DIR/agents/$agent.md"
-    dst="$AGENTS_DIR/$agent.md"
-    if [ -f "$dst" ]; then
-      if cmp -s "$src" "$dst"; then
-        rm -f "$dst"
-        ok "  removed preloaded $agent.md (will inject on /teamwork:task)"
-      else
-        warn "  kept custom $agent.md override"
-      fi
-    else
-      ok "  $agent.md already not preloaded"
-    fi
-  done
-else
-  echo "Installing bootstrap agents → $AGENTS_DIR/"
-  for agent in "${BOOTSTRAP_AGENTS[@]}"; do
-    cp "$SKILL_DIR/agents/$agent.md" "$AGENTS_DIR/$agent.md"
-    ok "  $agent.md"
-  done
-fi
+echo "Installing bootstrap agents → $AGENTS_DIR/"
+for agent in "${BOOTSTRAP_AGENTS[@]}"; do
+  cp "$SKILL_DIR/agents/$agent.md" "$AGENTS_DIR/$agent.md"
+  ok "  $agent.md"
+done
 
 if ! $FULL_AGENTS; then
   echo ""
