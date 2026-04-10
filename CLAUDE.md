@@ -29,7 +29,7 @@ Always run `--check` before and after modifying setup logic to confirm idempoten
 ### Pipeline Flow
 
 ```
-SKILL.md  →  team-lead  →  researcher (1..N, parallel when independent)  →  planner  →  plan-reviewer  →  codex-coder / copilot / claude-coder  →  verifier  →  final-reviewer  →  git-monitor (optional)
+SKILL.md  →  team-lead  →  research-lead  →  researcher (1..N, parallel when independent)  →  planner  →  plan-reviewer  →  codex-coder / copilot / claude-coder  →  verifier  →  final-reviewer  →  git-monitor (optional)
 ```
 
 `SKILL.md` is the skill entry point: it validates plugin availability, reads repo routing config (`.claude/team.md`), then delegates entirely to `team-lead`. The team-lead orchestrates the rest — it **must not modify files directly**.
@@ -41,6 +41,7 @@ SKILL.md  →  team-lead  →  researcher (1..N, parallel when independent)  →
   - `commands/task.md`
   - `agents/team-lead.md`
 - Research and planning:
+  - `agents/research-lead.md`
   - `agents/researcher.md`
   - `agents/planner.md`
   - `agents/plan-reviewer.md`
@@ -61,7 +62,8 @@ SKILL.md  →  team-lead  →  researcher (1..N, parallel when independent)  →
 | Agent | Role | May modify project files? |
 |-------|------|--------------------------|
 | `team-lead` | Orchestrates pipeline, routes tasks | No |
-| `researcher` | Single-scope worker; code investigation defaults to Codex, web research defaults to Copilot Claude path | No |
+| `research-lead` | Splits research scopes, dispatches researchers, consolidates brief for planner | No |
+| `researcher` | Single-scope worker dispatched by research-lead | No |
 | `planner` | Writes plan files in `.claude/plan/` | Plan files only |
 | `plan-reviewer` | Plan review/iteration (Codex when available, Claude fallback otherwise) | Plan files only |
 | `codex-coder` | Executes strict/formal tasks (TS/JS, APIs, tests) | Yes |
@@ -84,7 +86,7 @@ Routing is determined by task weight/rigor (not file type) and can be overridden
 
 ### Plugin Dependency
 
-Executors delegate to plugins when available: `codex-coder` uses `codex-companion.mjs`, `copilot` uses `copilot-companion.mjs`. `researcher` can use either plugin and falls back to Claude-native research when needed. `team-lead` decides whether to run one or multiple researcher scopes and can parallelize independent scopes.
+Executors delegate to plugins when available: `codex-coder` uses `codex-companion.mjs`, `copilot` uses `copilot-companion.mjs`. `research-lead` decides scope split and researcher backend routing. `researcher` can use either plugin and falls back to Claude-native research when needed.
 
 Fallback policy:
 - `copilot=false` and `codex=true`: route all plugin-backed work to Codex
@@ -93,7 +95,7 @@ Fallback policy:
 
 ### Research and Verification Policies
 
-- Code read/search requests should be routed to `researcher` first.
+- Code read/search requests should be routed to `research-lead` first, then dispatched to `researcher`.
 - `researcher` should output scoped area maps and split oversized areas into smaller sub-areas to reduce context.
 - Model focus for research when both plugins are available:
   - `research_kind=code` -> `codex` (stable/accurate investigation)

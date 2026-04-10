@@ -5,7 +5,7 @@ description: Multi-agent pipeline for complex tasks — research, plan, review, 
 
 # Teamwork Skill
 
-Run a structured multi-agent pipeline: team-lead decides research split, one or more researchers gather context for planner, planner writes a plan, plan-reviewer gates quality, executors implement approved tasks, verifier confirms checks, and final-reviewer performs final code review.
+Run a structured multi-agent pipeline: team-lead delegates research orchestration to research-lead, researcher workers gather scoped context, planner writes a plan, plan-reviewer gates quality, executors implement approved tasks, verifier confirms checks, and final-reviewer performs final code review.
 
 ## Dependencies
 
@@ -50,12 +50,13 @@ Activation safety:
 ```text
 team-lead
   ├── progressive load guides
-  │     guide A: research stage  → load researcher only
+  │     guide A: research stage  → load research-lead only
   │     guide B: plan stage      → load planner + plan-reviewer only
   │     guide C: execution stage → load executors/gates only when needed
-  ├── researcher(s)  → lead-decided split, parallel when independent
-  │                    default focus: code investigation -> codex, web research -> copilot (Claude path)
-  │                    outputs are merged into one brief for planner
+  ├── research-lead  → split scopes, route backends, dispatch/merge researcher workers
+  │     └── researcher(s)  → parallel by independent scope
+  │                          default focus: code investigation -> codex, web research -> copilot (Claude path)
+  │                          outputs are merged by research-lead for planner
   ├── planner        → writes .claude/plan/<slug>.md with executor annotations
   ├── plan-reviewer  → reviews plan (review or adversarial-review)
   ├── executors (parallel where possible):
@@ -116,15 +117,17 @@ Prompt: <user's description>
 
 Let `team-lead` run:
 
-1. `team-lead` decides a research split strategy
+1. `team-lead` delegates research-stage orchestration to `research-lead`
 2. `team-lead` chooses fallback strategy from plugin availability
 3. if full Claude fallback is selected, `team-lead` chooses model (`haiku|sonnet|opus`)
-4. one or more `researcher` agents run scoped research with selected backend (parallel when independent)
-   - code read/search tasks are owned by `researcher`
-   - when both plugins are available: code scopes default to Codex; web scopes default to Copilot Claude path
-   - mixed scopes should be split before researcher dispatch
+4. `research-lead` runs scope split + backend routing + researcher dispatch
+   - splits scopes and classifies `research_kind` (`code|web`)
+   - dispatches one or more `researcher` agents (parallel when independent)
+   - routes backend by policy when both plugins are available:
+     - code scopes -> Codex
+     - web scopes -> Copilot Claude path
    - each scope returns a minimal navigation map; oversized areas must be split
-5. `team-lead` consolidates research outputs (`ok|partial|research_unavailable`) into one brief
+5. `research-lead` consolidates outputs (`ok|partial|research_unavailable`) into one brief
 6. `planner` creates the plan using the consolidated brief
 7. `plan-reviewer` reviews and iterates plan quality (Codex or Claude-native fallback)
 8. executors implement approved tasks (Codex/Copilot/Claude fallback)
@@ -167,6 +170,7 @@ default: adversarial-review
 Optionally provide project-specific agent prompts in `.claude/agents/`:
 
 - `.claude/agents/researcher.md`
+- `.claude/agents/research-lead.md`
 - `.claude/agents/codex-coder.md`
 - `.claude/agents/copilot.md`
 - `.claude/agents/claude-coder.md`
@@ -200,6 +204,7 @@ Route by task weight and rigor requirement, not by language or file type:
 
 - `team-lead.md`
 - `researcher.md`
+- `research-lead.md`
 - `planner.md`
 - `plan-reviewer.md`
 - `codex-coder.md`

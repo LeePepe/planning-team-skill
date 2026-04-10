@@ -11,8 +11,9 @@ Copilot/Codex/Claude can all participate via fallback routing: if Copilot is una
         │
         ▼
    team-lead (orchestrates only — never modifies files directly)
-        ├── researcher(s) → lead decides split; runs in parallel when scopes are independent
-        │                   backend: copilot|codex|claude, then merged for planner
+        ├── research-lead → splits scopes, routes backends, dispatches/merges researchers
+        │    └── researcher(s) → run in parallel when scopes are independent
+        │                         backend: copilot|codex|claude per scope policy
         ├── planner      → creates .claude/plan/<slug>.md
         │                   each task annotated: executor: codex | copilot
         ├── plan-reviewer
@@ -57,7 +58,7 @@ Fallback policy:
 - Copilot unavailable + Codex available: all plugin-backed work falls back to Codex
 - Codex unavailable + Copilot available: research/execution use Copilot, review gates use Claude fallback when needed
 - Codex unavailable + Copilot unavailable: full Claude-native fallback; `team-lead` chooses model (`haiku|sonnet|opus`)
-- Multiple research scopes: `team-lead` decides split and runs `researcher` workers in parallel
+- Multiple research scopes: `research-lead` decides split and runs `researcher` workers in parallel
 
 ## Install This Skill
 
@@ -93,12 +94,12 @@ Then restart Codex.
 Setup now uses a lightweight default:
 - Preloads only `team-lead` into `.claude/agents`
 - Stores all other teamwork agents in `.claude/skills/teamwork/agents` and loads them progressively by stage:
-  - research stage: `researcher`
+  - research stage: `research-lead` (which dispatches `researcher`)
   - plan stage: `planner`, `plan-reviewer`
   - execution stage: executor/gate roles only when needed (`codex-coder`/`copilot`/`claude-coder`, `verifier`, `final-reviewer`, optional `git-monitor`)
 
 Research policy:
-- code read/search tasks are routed to `researcher`
+- code read/search tasks are routed through `research-lead` and executed by `researcher`
 - researcher outputs scoped navigation maps (`areas`, `entry points`, key paths) and must split oversized areas to keep context small
 - when both plugins are available:
   - code investigation scopes default to Codex (stability/accuracy first)
@@ -212,6 +213,7 @@ Add repo-aware agent definitions to `.claude/agents/` in your repo:
 
 - `.claude/agents/codex-coder.md` — knows your TS conventions, test setup, etc.
 - `.claude/agents/copilot.md` — knows your xcodebuild commands, project structure, etc.
+- `.claude/agents/research-lead.md` — splits research scopes and consolidates researcher outputs
 - `.claude/agents/researcher.md` — gathers repo/external context and writes planning briefs
 - `.claude/agents/claude-coder.md` — Claude-native coding fallback when plugins are unavailable
 - `.claude/agents/verifier.md` — enforces repo-specific verification strategy and output style

@@ -6,7 +6,7 @@ This repository ships a Claude Code skill plus agent definitions.
 - `SKILL.md`: core teamwork skill behavior and workflow.
 - `.codex-plugin/plugin.json`: Codex plugin metadata for this repo.
 - `skills/teamwork/SKILL.md`: Codex skill entry for setup/check/troubleshooting flows.
-- `agents/`: role-specific agent prompts (`team-lead.md`, `researcher.md`, `planner.md`, `plan-reviewer.md`, `codex-coder.md`, `copilot.md`, `claude-coder.md`, `verifier.md`, `final-reviewer.md`, `git-monitor.md`).
+- `agents/`: role-specific agent prompts (`team-lead.md`, `research-lead.md`, `researcher.md`, `planner.md`, `plan-reviewer.md`, `codex-coder.md`, `copilot.md`, `claude-coder.md`, `verifier.md`, `final-reviewer.md`, `git-monitor.md`).
 - `scripts/setup.sh`: installer/checker for global (`~/.claude`) or repo-local (`.claude`) setup.
 - `templates/team.md`: template for per-repo routing, review, and verification preferences.
 - `README.md`: usage, installation, and dependency docs.
@@ -21,6 +21,7 @@ Keep new role prompts in `agents/` and reusable config defaults in `templates/`.
 - `commands/task.md`: runtime task entry; passes routing/research/verification policy into `team-lead`.
 - `commands/setup.md`: user-facing setup command contract.
 - `agents/team-lead.md`: stage-by-stage loading guides and orchestration policy.
+- `agents/research-lead.md`: research-stage orchestration and consolidation over researcher workers.
 - `agents/researcher.md`: code read/search owner; scoped area map outputs.
 - `agents/planner.md`: converts research maps into minimal-scope execution plans.
 - `agents/verifier.md`: verification gate with cache-aware behavior.
