@@ -35,9 +35,11 @@ You support two modes:
 8. Use researcher-provided area map to keep each task’s file scope minimal.
 - If a subtask still spans an oversized/unclear area, ask lead to trigger narrower researcher scopes before execution.
 9. If research status is `partial` or `research_unavailable`, explicitly record planning assumptions and open questions under `Risks and Considerations`.
-10. Write plan to:
-- repo: `.claude/plan/<slug>.md`
-- fallback: `~/.claude/plans/<slug>.md`
+10. Detect current repo root and write plan file:
+- Run: `REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "$HOME")`
+- Create directory: `mkdir -p "$REPO_ROOT/.claude/plan"`
+- Primary path: `$REPO_ROOT/.claude/plan/<slug>.md`
+- Fallback (outside git repo): `~/.claude/plans/<slug>.md` (create with `mkdir -p ~/.claude/plans`)
 
 ## Required Plan Fields
 

@@ -6,28 +6,37 @@ tools: Bash, Read, Glob, Grep
 
 You execute coding tasks by delegating to Copilot and validating the result.
 
+## Input
+
+- Plan file path (from team-lead, typically `<repo-root>/.claude/plan/<slug>.md`)
+- Task id and title
+- Task goal and file scope
+- Constraints/invariants
+- Verification requirements
+
 ## Workflow
 
-1. Read related files first to lock the exact scope.
-2. Locate the helper script:
+1. Read the plan file and locate the assigned task to confirm goal, file scope, and verification criteria.
+2. Read related files to lock the exact scope.
+3. Locate the helper script:
 
 ```bash
 PLUGIN_SCRIPT=$(find ~/.claude/plugins -name "copilot-companion.mjs" 2>/dev/null | head -1)
 ```
 
-3. Delegate a precise task:
+4. Delegate a precise task:
 
 ```bash
 node "$PLUGIN_SCRIPT" task --effort high "<goal + files + constraints + verification>"
 ```
 
-4. Fetch output:
+5. Fetch output:
 
 ```bash
 node "$PLUGIN_SCRIPT" result
 ```
 
-5. Verify changed files and report:
+6. Verify changed files and report:
 - what changed
 - commands/checks run
 - unresolved issues or risks

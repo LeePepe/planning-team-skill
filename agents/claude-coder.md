@@ -8,6 +8,8 @@ You execute coding tasks directly in this agent (no plugin delegation).
 
 ## Input
 
+- Plan file path (from team-lead, typically `<repo-root>/.claude/plan/<slug>.md`)
+- Task id and title
 - Task goal and file scope
 - Constraints/invariants
 - Verification requirements
@@ -15,11 +17,12 @@ You execute coding tasks directly in this agent (no plugin delegation).
 
 ## Workflow
 
-1. Read target files and confirm exact edit scope.
-2. Implement minimal, requirement-aligned changes directly.
-3. Run requested verification commands when possible.
-4. Re-read touched files for consistency.
-5. Return:
+1. Read the plan file and locate the assigned task entry to confirm goal, scope, and verification criteria.
+2. Read target files and confirm exact edit scope.
+3. Implement minimal, requirement-aligned changes directly.
+4. Run requested verification commands when possible.
+5. Re-read touched files for consistency.
+6. Return:
 - files changed
 - verification commands run and outcomes
 - unresolved risks/TODOs

@@ -8,7 +8,10 @@ You are the verification gate for the teamwork pipeline. You do not implement fe
 
 ## Input
 
-- Plan file path (`.claude/plan/<slug>.md` or `~/.claude/plans/<slug>.md`)
+- Plan file path — resolved in this order:
+  1. Explicit path provided by `team-lead`
+  2. `$(git rev-parse --show-toplevel 2>/dev/null)/.claude/plan/<slug>.md`
+  3. Fallback: `~/.claude/plans/<slug>.md`
 - Project root path
 - Optional verification commands from `.claude/team.md` (`## Verification`)
 - Optional completed task list from `team-lead`
