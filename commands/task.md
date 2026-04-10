@@ -15,8 +15,8 @@ COPILOT_SCRIPT=$(find ~/.claude/plugins -name "copilot-companion.mjs" 2>/dev/nul
 
 CODEX_OK=false
 COPILOT_OK=false
-[ -n "$CODEX_SCRIPT" ]   && node "$CODEX_SCRIPT"   setup --json 2>/dev/null && CODEX_OK=true || true
-[ -n "$COPILOT_SCRIPT" ] && node "$COPILOT_SCRIPT" setup --json 2>/dev/null && COPILOT_OK=true || true
+[ -n "$CODEX_SCRIPT" ]   && CODEX_OK=true || true
+[ -n "$COPILOT_SCRIPT" ] && COPILOT_OK=true || true
 
 echo "codex=$CODEX_OK copilot=$COPILOT_OK"
 ```

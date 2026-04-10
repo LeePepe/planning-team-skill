@@ -97,15 +97,18 @@ maybe_cleanup_recursive_teamwork_cache() {
 }
 
 # ── Check plugins ────────────────────────────────────────────────────────────
-check_plugin() {
-  local cache_dir="$1"
-  [ -d "$PLUGINS_CACHE/$cache_dir" ]
+find_companion_script() {
+  local script_name="$1"
+  find "$HOME/.claude/plugins" -name "$script_name" 2>/dev/null | head -1
 }
+
+CODEX_SCRIPT="$(find_companion_script "codex-companion.mjs")"
+COPILOT_SCRIPT="$(find_companion_script "copilot-companion.mjs")"
 
 CODEX_OK=false
 COPILOT_OK=false
-check_plugin "openai-codex" && CODEX_OK=true || true
-check_plugin "copilot-local" && COPILOT_OK=true || true
+[ -n "$CODEX_SCRIPT" ] && CODEX_OK=true || true
+[ -n "$COPILOT_SCRIPT" ] && COPILOT_OK=true || true
 
 # ── Check mode ───────────────────────────────────────────────────────────────
 if $CHECK_ONLY; then
