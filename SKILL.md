@@ -70,6 +70,15 @@ team-lead
 
 ## Workflow
 
+Operational guardrails (always on):
+- Keep active sub-agents bounded; proactively close completed agents before spawning new ones.
+- If spawn fails due thread/resource limits, close stale agents and retry once; if still failing, stop and report delegation failure.
+- Treat verifier/final-review output as stale after any code-changing repair; re-run both gates on fresh evidence.
+- Keep an explicit automatic-repair counter and stop at one repair cycle; if still failing, return `needs_manual_fix`.
+- Emit executor evidence in the final summary: `task_id -> executor -> agent_id -> status`.
+- If `copilot=true` and there are `executor: copilot` tasks, dispatch at least one to `copilot`; otherwise report why not.
+- Use portable shell commands in prompts and snippets (avoid assumptions like `timeout` availability).
+
 ### 1) Validate plugin readiness
 
 ```bash
@@ -148,6 +157,8 @@ Return:
 - failed/skipped tasks
 - verification result with command evidence
 - final review result with key findings
+- copilot invocation evidence (`invoked: true|false`, tasks, agent ids)
+- boundary-violation notes (if any)
 - follow-up actions
 
 ## Per-Repo Customization
@@ -200,6 +211,8 @@ Route by task weight and rigor requirement, not by language or file type:
 - Require final review pass (or explicit `needs_manual_review`) before claiming completion.
 - Keep planner and reviewer scoped to plan files; avoid direct project-code edits there.
 - Keep executor prompts concrete: scope, dependencies, verification.
+- After any code-changing repair, previous verifier/final-review results are invalid and must be refreshed.
+- Keep automatic repair loops bounded to one cycle; escalate instead of silently continuing beyond budget.
 
 ## Shipped Agents
 

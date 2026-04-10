@@ -108,4 +108,6 @@ Return:
 - Failed or skipped tasks
 - Verification result and command evidence
 - Final review result and key findings
+- Copilot invocation evidence (`invoked: true|false`, tasks, agent ids, or reason not used)
+- Boundary/constraint violations observed during run (if any)
 - Suggested follow-up actions

@@ -83,7 +83,14 @@ echo "codex=$([ -n "$CODEX_SCRIPT" ] && echo true || echo false) copilot=$([ -n 
 - codex=true, copilot=false -> force `codex-coder`
 - codex=false, copilot=true -> force `copilot`
 - both false -> force `claude-coder` and choose `haiku|sonnet|opus` by complexity
-4. Return a concrete execution plan before implementation.
+4. Enforce runtime guardrails before implementation:
+- keep active delegated agents bounded; close completed agents before spawning new ones
+- if `spawn_agent` fails due thread limit/resource errors, close stale agents and retry once
+- track automatic repair count and stop at one repair cycle
+- after any code-changing repair, re-run verifier/final-review on fresh evidence
+5. Return a concrete execution plan before implementation, including:
+- expected copilot usage (`invoked true|false` conditions)
+- final reporting fields (copilot evidence + boundary violations)
 
 ## Overload diagnostics
 

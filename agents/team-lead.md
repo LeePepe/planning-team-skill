@@ -38,6 +38,19 @@ You can use superpowers.
 - load only the roles needed for the current stage
 - if a required role cannot be loaded, stop with actionable setup guidance
 
+0.5 Agent lifecycle policy (mandatory):
+- keep active delegated agents bounded (target <= 4 active agents, hard cap <= 6)
+- before spawning new agents, close completed/idle agents that are no longer needed
+- if spawn fails with thread-limit/resource errors, close stale completed agents and retry once
+- if retry still fails, stop and report delegation failure instead of continuing with local implementation
+- do not send new coding tasks to a completed agent unless it is explicitly resumed and confirmed active
+
+0.6 Gate freshness and repair budget (mandatory):
+- any code-changing repair invalidates previous `verifier` and `final-reviewer` results
+- after a repair, re-run verifier and final-review on fresh evidence before claiming completion
+- total automatic repair budget is 1 cycle across verifier/final-review failures
+- if still failing after 1 cycle, stop and return `needs_manual_fix` with concrete findings
+
 ### Guide A — Research Stage Loading
 
 Load `research-lead` only when research is required (non-trivial task or multi-domain task).
@@ -122,28 +135,32 @@ done
 - when `copilot=false` and `codex=true`: force all tasks to `codex-coder`
 - when `codex=false` and `copilot=true`: force all tasks to `copilot`
 - when both unavailable: force all tasks to `claude-coder` and pass `claude_model`
-15. After execution, spawn `verifier` with:
+15. Copilot evidence rule:
+- when `copilot=true` and at least one pending task is annotated `executor: copilot`, you must dispatch at least one task to `copilot`
+- track per-task executor evidence (`task_id -> agent_id -> status`)
+- if `copilot=true` but no copilot task is dispatched, include explicit reason in final summary
+16. After execution, spawn `verifier` with:
 - plan path
 - repo path
 - verification preferences from `.claude/team.md` (if present)
 - completed task ids
 - request cache-aware verification (`cache_key` based on repo state + commands)
-16. Handle verifier result:
+17. Handle verifier result:
 - `pass` -> continue
 - `fail` -> run one repair round on failed tasks, then re-run verifier once
 - `needs_manual_verification` -> continue with explicit manual-verification warning
-17. Spawn `final-reviewer` after verifier:
+18. Spawn `final-reviewer` after verifier:
 - Pass review backend (`codex|claude`) and `claude_model` when backend is `claude`.
 - if final review `pass` -> continue
 - if `fail` -> run one repair round on flagged tasks, then re-run final-review once
 - if `needs_manual_review` -> continue with explicit warning
-18. After final-reviewer passes, optionally load `git-monitor` and spawn it when the pipeline produced real file changes:
+19. After final-reviewer passes, optionally load `git-monitor` and spawn it when the pipeline produced real file changes:
 - Pass: plan path, modified files list, repo root
 - `git-monitor` stages changes, commits, creates PR, and monitors CI/comments
 - `ok` result -> include commit SHA and PR URL in summary
 - `fail` result -> flag for manual git action; do not block completion
 - Skip git-monitor for plan-only or review-only runs with no file changes
-19. Return summary: fallback strategy, selected model (if Claude fallback), research split strategy (from `research-lead`), consolidated research result, completed tasks, modified files, failed/skipped items, verification result, final review result, git-monitor result (if run), next actions.
+20. Return summary: fallback strategy, selected model (if Claude fallback), research split strategy (from `research-lead`), consolidated research result, completed tasks, modified files, failed/skipped items, verification result, final review result, git-monitor result (if run), copilot invocation evidence, boundary-violation notes, next actions.
 
 ## Constraints
 
@@ -158,3 +175,6 @@ done
 - Operate through agent delegation and coordination, not direct implementation.
 - Enforce dependency-safe ordering.
 - Limit automatic repair loops to 1 to avoid infinite retries.
+- After any repair that changes files, always invalidate and re-run verifier/final-review outputs.
+- Keep a running counter for repair loops and stop when budget is exhausted.
+- Prefer portable shell commands; avoid non-portable dependencies such as `timeout`.
