@@ -1,6 +1,7 @@
 ---
 name: teamwork
 description: Multi-agent pipeline for complex tasks — research, plan, review, execute, verify, and ship. Supports Codex/Copilot/Claude fallback routing.
+allowed-tools: Bash, Agent
 ---
 
 # Teamwork Skill
@@ -42,6 +43,8 @@ Activation safety:
 - Only activate this skill for explicit teamwork intent (`/teamwork:task ...` or clear request to "use teamwork").
 - Do not activate for casual chat, greetings, or unrelated prompts.
 - If the user does not explicitly trigger teamwork, normal Claude execution may run directly without `team-lead`/subagents.
+
+**Default on activation: immediately spawn `team-lead`.** This skill's only role is plugin validation, team config read, and Agent delegation — never direct implementation. Using `Write`, `Edit`, or any file-mutating tool in this skill entry is a hard pipeline violation.
 
 > To install or check status, use `/teamwork:setup` (available after installing this plugin).
 
@@ -111,10 +114,12 @@ If `.claude/team.md` exists, read:
 
 ### 3) Delegate orchestration to `team-lead`
 
-Hard requirement:
-- Skill entry does orchestration only.
+**HARD STOP — mandatory Agent delegation:**
+- Spawn `team-lead` immediately via `Agent`. Do not proceed with any other action.
 - Do not implement user code directly in the skill entry.
-- Delegate execution to `team-lead` first, then report `team-lead` pipeline results.
+- Do not use `Write`, `Edit`, or any file-mutating tool before or after spawning `team-lead`.
+- If `Agent` delegation fails, report the failure and stop — never fall back to local implementation.
+- After `team-lead` returns, proceed to Step 4 (report only). No further implementation steps.
 
 Pass:
 

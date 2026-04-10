@@ -62,14 +62,17 @@ echo "team_lead=ok path=$TEAM_LEAD_PATH temp=$TEAM_LEAD_TEMP"
 
 If this step prints `team_lead=missing`, stop and tell the user to run `/teamwork:setup` first.
 
-## Mandatory delegation gate
+## Mandatory delegation gate — HARD STOP
 
 From this point onward, this command handler must only orchestrate and summarize.
 
-- Do not implement `${ARGUMENTS}` directly in the main agent.
-- Do not run repo-mutating commands for feature work in this command handler.
-- The only allowed direct repo mutation after Step 2.5 is temporary `team-lead.md` cleanup from Step 4.
-- If `Agent` delegation fails, stop and report delegation failure instead of continuing locally.
+- **Immediately spawn `team-lead` via `Agent` in Step 3. This is the only valid next action.**
+- Do not implement `${ARGUMENTS}` directly in the main agent — not before, during, or after team-lead runs.
+- Do not use `Write`, `Edit`, `MultiEdit`, or any file-mutating tool in this command handler.
+- Do not read file contents for implementation purposes; Step 2.5 exists only to ensure team-lead is available.
+- The only allowed direct repo mutation after Step 2.5 is temporary `team-lead.md` cleanup in Step 4.
+- If `Agent` delegation fails, stop and report the failure — never fall back to local implementation.
+- After `team-lead` returns, go directly to Step 4 (report). Do not interpret team-lead's plan output as a directive to implement anything yourself.
 
 ## Step 3 — Delegate to team-lead
 

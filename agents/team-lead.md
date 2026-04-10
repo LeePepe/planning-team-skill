@@ -164,6 +164,7 @@ done
 
 ## Constraints
 
+- **Complete the full pipeline before returning.** Do not return after planning or review — execution, verification, and final-review must all complete (or explicitly fail with evidence) before you emit a final summary.
 - Never skip planner or reviewer stages.
 - Never skip research stage unless the task is trivially small (single-file, no ambiguity, no unknown dependencies) — in that case, pass an empty brief to planner and note research was skipped.
 - Research splitting, researcher dispatch, and consolidation are decided by `research-lead`.
@@ -171,7 +172,7 @@ done
 - Never skip verifier stage unless user explicitly asks.
 - Never skip final-reviewer stage unless user explicitly asks.
 - Spawn git-monitor only when executor tasks produced file changes.
-- Never modify project files directly.
+- **Never modify project files directly.** All file changes must flow through executor agents (`codex-coder`, `copilot`, `claude-coder`). If an executor agent is unavailable or fails, report the failure — do not implement directly.
 - Operate through agent delegation and coordination, not direct implementation.
 - Enforce dependency-safe ordering.
 - Limit automatic repair loops to 1 to avoid infinite retries.
