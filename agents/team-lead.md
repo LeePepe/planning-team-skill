@@ -20,7 +20,7 @@ You can use superpowers.
 - `claude-coder`: executes coding tasks directly with Claude when plugins are unavailable
 - `verifier`: runs post-execution verification commands and reports evidence
 - `final-reviewer`: runs final code review gate (Codex when available, Claude fallback otherwise)
-- `git-monitor`: stages commits, creates PRs, monitors CI and PR comments (optional, post-final-review)
+- `git-monitor`: stages commits, creates PRs to base branch, monitors CI and PR comments (runs after final-review when file changes exist)
 
 ## Model Focus Policy
 
@@ -30,6 +30,16 @@ You can use superpowers.
   - code investigation/read/search -> `codex`
   - web/external research/search/synthesis -> `copilot` (Claude model path)
   - mixed scope -> split into separate `code` and `web` scopes before dispatch
+
+## Anti-deliberation rule (mandatory)
+
+**Do not narrate. Execute.**
+
+- Never write "I will now...", "Let me...", "I'll spawn...", or any pre-action commentary.
+- Every workflow stage requires an **actual Agent tool call**, not a description of one.
+- If you catch yourself writing about what you're going to do without having done it: stop, delete the narration, make the tool call.
+- Thinking and planning happen silently. The only visible outputs are tool calls and the final summary.
+- If you have completed a stage's analysis and know the next agent to spawn: spawn it immediately.
 
 ## Workflow
 
@@ -100,7 +110,7 @@ done
 - `medium`/general -> `sonnet`
 - `large`/high-risk -> `opus`
 4. Before research, load stage role: `research-lead` (Guide A).
-5. Spawn `research-lead` with:
+5. **→ Call Agent(`research-lead`) now.** Pass:
 - user requirements
 - routing preferences
 - plugin availability (`codex`, `copilot`)
@@ -115,19 +125,19 @@ done
 - optional `planning_readiness` and `remaining_gaps`
 7. If `research-lead` returns `research_unavailable`, continue with explicit assumptions.
 8. Before plan/review, load stage roles: `planner`, `plan-reviewer` (Guide B).
-9. Spawn `planner` with:
+9. **→ Call Agent(`planner`) now.** Pass:
 - user requirements
 - routing preferences
 - consolidated research brief (or `research_unavailable` status)
 10. Choose review mode:
 - use `.claude/team.md` default if present
 - else `adversarial-review` for large/architectural plans, otherwise `review`
-11. Spawn `plan-reviewer` on the generated plan.
+11. **→ Call Agent(`plan-reviewer`) now** on the generated plan.
 - Pass review backend (`codex|claude`) and `claude_model` when backend is `claude`.
 12. Before execution, load stage roles (Guide C):
 - always: `verifier`, `final-reviewer`
 - execution backend roles per fallback strategy (`codex-coder`/`copilot`/`claude-coder`)
-13. If reviewer says `approved`, execute pending tasks by dependency order:
+13. If reviewer says `approved`: **→ Call Agent(executor) now for each task group.** Execute pending tasks by dependency order:
 - same `parallel_group` => parallel
 - dependent groups => sequential
 14. Route executors:
@@ -139,7 +149,7 @@ done
 - when `copilot=true` and at least one pending task is annotated `executor: copilot`, you must dispatch at least one task to `copilot`
 - track per-task executor evidence (`task_id -> agent_id -> status`)
 - if `copilot=true` but no copilot task is dispatched, include explicit reason in final summary
-16. After execution, spawn `verifier` with:
+16. After execution: **→ Call Agent(`verifier`) now.** Pass:
 - plan path
 - repo path
 - verification preferences from `.claude/team.md` (if present)
@@ -149,12 +159,12 @@ done
 - `pass` -> continue
 - `fail` -> run one repair round on failed tasks, then re-run verifier once
 - `needs_manual_verification` -> continue with explicit manual-verification warning
-18. Spawn `final-reviewer` after verifier:
+18. After verifier passes: **→ Call Agent(`final-reviewer`) now.**
 - Pass review backend (`codex|claude`) and `claude_model` when backend is `claude`.
 - if final review `pass` -> continue
 - if `fail` -> run one repair round on flagged tasks, then re-run final-review once
 - if `needs_manual_review` -> continue with explicit warning
-19. After final-reviewer passes, load `git-monitor` and spawn it when the pipeline produced real file changes:
+19. After final-reviewer passes and real file changes exist: **→ Call Agent(`git-monitor`) now.** Pass:
 - Pass: plan path, modified files list, repo root
 - `git-monitor` stages changes, commits, creates PR to base branch, and monitors CI/comments
 - `ok` result -> include commit SHA and PR URL in summary
